@@ -8,7 +8,7 @@
     <!-- SheetJS for Excel/CSV import -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- QRCode library for PO2 -->
-    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         :root {
             --bg-color: #1a1a1a;
@@ -1610,16 +1610,16 @@
 
         // --- SESSION HANDLING ---
         const SESSION_COLORS = {
-            "MODRÁ": "#2196f3",
-            "ZELENÁ": "#4caf50",
-            "ČERVENÁ": "#f44336",
-            "ŽLUTÁ": "#ffc107",
-            "ORANŽOVÁ": "#ff9800",
-            "FIALOVÁ": "#9c27b0",
-            "BÍLÁ": "#ffffff",
-            "ŠEDÁ": "#9e9e9e",
-            "RŮŽOVÁ": "#e91e63",
-            "TYRKYSOVÁ": "#00bcd4"
+            "BLUE": "#2196f3",
+            "GREEN": "#4caf50",
+            "RED": "#f44336",
+            "YELLOW": "#ffc107",
+            "ORANGE": "#ff9800",
+            "PURPLE": "#9c27b0",
+            "WHITE": "#ffffff",
+            "GRAY": "#9e9e9e",
+            "PINK": "#e91e63",
+            "CYAN": "#00bcd4"
         };
 
         const urlParams = new URLSearchParams(window.location.search);
@@ -5066,10 +5066,9 @@
         </div>
     </div>
 
-    <!-- PUBLIC QR CODE LAYOUT (PO2) -->
     <div id="qr-layout"
         style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#1a1a1a; color:white; padding:20px; text-align:center;">
-        <div id="qr-header-stripe" style="height: 6px; width: 100%; position: fixed; top: 0; left: 0; z-index: 1000;">
+        <div id="qr-header-stripe" style="height: 4px; width: 100%; position: fixed; top: 0; left: 0; z-index: 1000;">
         </div>
         <h1 id="qr-tournament-name" style="font-size:3.5vw; margin-bottom:2vh; color:var(--accent-blue);">SB Scoreboard
         </h1>
