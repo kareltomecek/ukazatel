@@ -501,7 +501,7 @@
         /* --- Admin Footer --- */
         #admin-footer {
             display: grid;
-            grid-template-columns: minmax(100px, auto) 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr;
             align-items: center;
             background: #111;
             padding: 0 20px;
@@ -1549,9 +1549,10 @@
 
 
     <div id="admin-footer">
-        <div id="admin-footer-session"
-            style="font-weight:bold; color:var(--accent-blue); text-align:left; font-size:0.8em;">Relace: ---</div>
-        <div id="admin-footer-progress">-</div>
+        <div style="text-align:left; font-size:0.85em; white-space:nowrap;">
+            <span id="admin-footer-session" style="font-weight:bold; color:var(--accent-blue);">---</span>
+            <span id="admin-footer-progress" style="font-weight:bold; color:#888;">&nbsp;&nbsp;&nbsp;&nbsp;-</span>
+        </div>
         <div id="admin-footer-end">-</div>
         <div id="admin-footer-time">-</div>
     </div>
@@ -2057,9 +2058,12 @@
             // Returns true if match change was successful
             loadMatchByRelativeIndex: (offset) => {
                 // Auto-Save Score of currently active match before switching
-                if (state.activeMatchIndex !== -1 && state.schedule[state.activeMatchIndex]) {
-                    state.schedule[state.activeMatchIndex].homeScore = state.currentMatch.homeScore;
-                    state.schedule[state.activeMatchIndex].guestScore = state.currentMatch.guestScore;
+                if (state.activeMatchIndex !== -1 && !state.currentMatch.isEvent) {
+                    const currentMatchInSched = state.schedule[state.activeMatchIndex];
+                    if (currentMatchInSched && currentMatchInSched.type === 'match') {
+                        currentMatchInSched.homeScore = state.currentMatch.homeScore;
+                        currentMatchInSched.guestScore = state.currentMatch.guestScore;
+                    }
                 }
 
                 let targetIndex = state.activeMatchIndex;
@@ -4281,10 +4285,10 @@
                 const end = document.getElementById('admin-footer-end');
                 const time = document.getElementById('admin-footer-time');
                 const sess = document.getElementById('admin-footer-session');
-                if (prog) prog.innerText = telemetry.progress;
+                if (prog) prog.innerText = `\u00A0\u00A0\u00A0\u00A0${telemetry.progress}`;
                 if (end) end.innerText = telemetry.end;
                 if (time) time.innerText = telemetry.time;
-                if (sess) sess.innerText = `Relace: ${state.sessionId}`;
+                if (sess) sess.innerText = state.sessionId;
             },
             render: () => {
                 try {
@@ -4821,17 +4825,23 @@
                             document.getElementById('qr-tournament-name').innerText = state.tournamentName || "SB Scoreboard";
                             document.getElementById('qr-session-id').innerText = state.sessionId;
 
+                            // Apply hybrid branding to QR header stripe
+                            const colorCode = state.sessionId.split('-')[0];
+                            const stripeColor = SESSION_COLORS[colorCode] || 'transparent';
+                            const stripe = document.getElementById('qr-header-stripe');
+                            if (stripe) stripe.style.background = stripeColor;
+
                             // Generate QR Code if empty
                             const container = document.getElementById('qr-container');
                             if (container && container.innerHTML === "") {
                                 const poUrl = window.location.origin + window.location.pathname + '?projection&session=' + state.sessionId;
                                 new QRCode(container, {
                                     text: poUrl,
-                                    width: Math.min(window.innerWidth, window.innerHeight) * 0.6,
-                                    height: Math.min(window.innerWidth, window.innerHeight) * 0.6,
+                                    width: Math.min(window.innerWidth, window.innerHeight) * 0.5,
+                                    height: Math.min(window.innerWidth, window.innerHeight) * 0.5,
                                     colorDark: "#000000",
                                     colorLight: "#ffffff",
-                                    correctLevel: QRCode.CorrectLevel.H
+                                    correctLevel: QRCode.CorrectLevel.L
                                 });
                             }
                         }
@@ -5059,13 +5069,15 @@
     <!-- PUBLIC QR CODE LAYOUT (PO2) -->
     <div id="qr-layout"
         style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#1a1a1a; color:white; padding:20px; text-align:center;">
+        <div id="qr-header-stripe" style="height: 6px; width: 100%; position: fixed; top: 0; left: 0; z-index: 1000;">
+        </div>
         <h1 id="qr-tournament-name" style="font-size:3.5vw; margin-bottom:2vh; color:var(--accent-blue);">SB Scoreboard
         </h1>
         <div id="qr-container"
-            style="background:white; padding:2vw; border-radius:1vw; box-shadow:0 1vw 3vw rgba(0,0,0,0.5);"></div>
+            style="background:white; padding:1.5vw; border-radius:0.5vw; box-shadow:0 1vw 3vw rgba(0,0,0,0.5);"></div>
         <div style="margin-top:4vh; font-size:2vw;">
             <p>Naskenujte pro sledování výsledků na mobilu</p>
-            <p style="font-size:1.5vw; color:#888; margin-top:1vh;">Relace: <span id="qr-session-id"
+            <p style="font-size:1.5vw; color:#888; margin-top:1vh;"><span id="qr-session-id"
                     style="color:var(--accent-blue); font-weight:bold;">---</span></p>
         </div>
     </div>
