@@ -4,9 +4,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Scoreboard App</title>
+    <title>Antigravity Scoreboard (SB)</title>
     <!-- SheetJS for Excel/CSV import -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- QRCode library for PO2 -->
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <style>
         :root {
             --bg-color: #1a1a1a;
@@ -499,7 +501,7 @@
         /* --- Admin Footer --- */
         #admin-footer {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: minmax(100px, auto) 1fr 1fr 1fr;
             align-items: center;
             background: #111;
             padding: 0 20px;
@@ -954,6 +956,8 @@
 
 <body>
 
+    <div id="admin-header-stripe"
+        style="height: 4px; width: 100%; position: fixed; top: 0; left: 0; z-index: 1000; display: none;"></div>
     <div id="app-container">
         <!-- LEFT PANEL: Game Controls -->
         <div id="game-controls" class="panel">
@@ -1118,6 +1122,44 @@
 
 
 
+            <!-- 3. Players -->
+            <div class="accordion">
+                <div class="accordion-header" onclick="toggleAccordion('acc-players')">
+                    Hráči <span>▼</span>
+                </div>
+                <div id="acc-players" class="accordion-content">
+                    <div class="form-group">
+                        <label>Seznam Hráčů</label>
+                        <div id="players-input-list"
+                            style="display:flex; flex-direction:column; gap:5px; margin-bottom:10px;">
+                            <!-- Dynamically populated -->
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            <div style="display:flex; gap:5px;">
+                                <button class="small-btn btn-green" onclick="admin.addPlayerSlot()"
+                                    title="Přidá nový prázdný řádek pro zadání jména a UCI-ID hráče.">+ Přidat
+                                    hráče</button>
+                                <a href="https://portal.czechcyclingfederation.com/Racer" target="_blank"
+                                    class="small-btn"
+                                    title="Otevře oficiální portál ČSC pro vyhledání UCI-ID podle jména."
+                                    style="background:#0056b3; display:flex; align-items:center; text-decoration:none; color:white; font-size:0.75em; padding:0 10px;">
+                                    🌐 Hledat UCI-ID
+                                </a>
+                            </div>
+                            <div style="display:flex; gap:5px;">
+                                <button class="small-btn" onclick="admin.updatePlayersFromCloud()"
+                                    title="Stáhne nejnovější databázi hráčů z Google Disku a synchronizuje ji s vaší lokální verzí."
+                                    style="background:#00a2ff; flex:1; font-weight:bold;">🔄 Aktualizovat z
+                                    cloudu</button>
+                                <button class="small-btn" onclick="admin.exportPlayersWithPassword()"
+                                    title="Vytvoří zálohu vaší aktuální databáze hráčů do souboru. Vyžaduje heslo."
+                                    style="background:#555; flex:1;">📥 Export databáze</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- 2. Team Logos & Anthems -->
             <div class="accordion">
                 <div class="accordion-header" onclick="toggleAccordion('acc-logos')">
@@ -1130,7 +1172,8 @@
                             style="display:flex; flex-direction:column; gap:5px; margin-bottom:10px;">
                             <!-- Dynamically populated numbered inputs -->
                         </div>
-                        <button class="small-btn btn-green" onclick="admin.addTeamSlot()">+ Přidat družstvo</button>
+                        <button class="small-btn btn-green" onclick="admin.addTeamSlot()"
+                            title="Přidá nový řádek pro zadání názvu družstva.">+ Přidat družstvo</button>
                     </div>
                     <div id="team-logo-list"
                         style="margin-bottom:15px; border:1px solid #444; padding:10px; border-radius:4px; max-height:250px; overflow-y:auto;">
@@ -1142,13 +1185,13 @@
                             style="display:flex; flex-direction:column; gap:5px; margin-bottom:10px;">
                             <!-- Dynamically populated numbered inputs -->
                         </div>
-                        <button class="small-btn btn-green" onclick="admin.addRefereeSlot()">+ Přidat
-                            rozhodčího</button>
+                        <button class="small-btn btn-green" onclick="admin.addRefereeSlot()"
+                            title="Přidá nový řádek pro zadání jména rozhodčího.">+ Přidat rozhodčího</button>
                     </div>
                 </div>
             </div>
 
-            <!-- 3. Schedule -->
+            <!-- 4. Schedule -->
             <div class="accordion">
                 <div class="accordion-header" onclick="toggleAccordion('acc-schedule')">
                     Rozpis Zápasů <span>▼</span>
@@ -1157,9 +1200,11 @@
 
                     <div class="mode-toggle" style="margin-top: 5px; background: #222;">
                         <button id="tab-sched-gen" class="mode-toggle-btn sched-tab-btn active"
-                            onclick="admin.setScheduleMode('gen')">🛠️ Generátor</button>
+                            onclick="admin.setScheduleMode('gen')"
+                            title="Vytvořit rozpis automaticky podle šablony.">🛠️ Generátor</button>
                         <button id="tab-sched-import" class="mode-toggle-btn sched-tab-btn"
-                            onclick="admin.setScheduleMode('import')">📊 Import</button>
+                            onclick="admin.setScheduleMode('import')"
+                            title="Importovat rozpis z Excelu nebo CSV souboru.">📊 Import</button>
                     </div>
 
 
@@ -1169,7 +1214,7 @@
                         <div id="sched-template-container">
                             <label
                                 style="display:block; font-size:0.85em; color:var(--accent-blue); font-weight:bold; margin-bottom:12px;">Automatický
-                                rozpis (podle schématu)</label>
+                                rozpis (podle vzorů)</label>
                             <div style="display:flex; gap:8px;">
                                 <select id="sched-template-select" style="flex:1">
                                     <optgroup label="Vzory základní">
@@ -1185,6 +1230,7 @@
                                     </optgroup>
                                 </select>
                                 <button class="small-btn btn-blue" onclick="admin.generateScheduleFromTemplate()"
+                                    title="Smaže aktuální rozpis a vytvoří nový podle vybraného vzoru a počtu družstev."
                                     style="background:var(--accent-blue);">Generovat</button>
                             </div>
                         </div>
@@ -1277,8 +1323,10 @@
                         </div>
                         <div id="sched-controls-add" style="display:flex; gap:5px;">
                             <button class="btn-full" onclick="admin.addMatch()"
+                                title="Uložit tento zápas nebo událost do rozpisu."
                                 style="background: var(--accent-blue);">Uložit</button>
-                            <button class="btn-full btn-yellow" onclick="admin.toggleAddMode()">Zrušit</button>
+                            <button class="btn-full btn-yellow" onclick="admin.toggleAddMode()"
+                                title="Zavřít formulář bez uložení změn.">Zrušit</button>
                         </div>
                         <div id="sched-controls-edit" style="display:none; gap:5px; margin-top:10px;">
                             <button class="btn-full btn-green" onclick="admin.saveEditedMatch()">Uložit
@@ -1307,21 +1355,6 @@
                 </div>
             </div>
 
-            <!-- 4. Export -->
-            <div class="accordion">
-                <div class="accordion-header" onclick="toggleAccordion('acc-export')">
-                    Exporty <span>▼</span>
-                </div>
-                <div id="acc-export" class="accordion-content">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-                        <button class="btn-full" onclick="exporter.toXLSX()"
-                            style="background:#4caf50; margin-top:0;">📊 Excel</button>
-                        <button class="btn-full" onclick="exporter.toPrintable()"
-                            style="background:#2196f3; margin-top:0;">🖨️ Pro tisk</button>
-                    </div>
-                </div>
-            </div>
-
             <!-- 5. Unified Tables -->
             <div class="accordion">
                 <div class="accordion-header" onclick="toggleAccordion('acc-standings')">
@@ -1331,12 +1364,31 @@
                     <div class="tab-switcher"
                         style="display: flex; gap: 5px; margin-bottom: 10px; border-bottom: 1px solid #444; padding-bottom: 8px;">
                         <button id="tab-btn-standings" class="small-btn" style="flex: 1;"
-                            onclick="admin.setStandingsTab('standings')">Pořadí</button>
+                            onclick="admin.setStandingsTab('standings')"
+                            title="Zobrazit standardní tabulku s pořadím, body a skóre.">Pořadí</button>
                         <button id="tab-btn-cross" class="small-btn" style="flex: 1;"
-                            onclick="admin.setStandingsTab('cross')">Křížová</button>
+                            onclick="admin.setStandingsTab('cross')"
+                            title="Zobrazit křížovou tabulku vzájemných zápasů.">Křížová</button>
                     </div>
                     <div id="standings-container">
                         <!-- Standard standings or Cross table will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Export -->
+            <div class="accordion">
+                <div class="accordion-header" onclick="toggleAccordion('acc-export')">
+                    Exporty <span>▼</span>
+                </div>
+                <div id="acc-export" class="accordion-content">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                        <button class="btn-full" onclick="exporter.toXLSX()"
+                            title="Exportovat rozpis, tabulky a seznam hráčů do Excel souboru (.xlsx)."
+                            style="background:#4caf50; margin-top:0;">📊 Excel</button>
+                        <button class="btn-full" onclick="exporter.toPrintable()"
+                            title="Vygenerovat tiskovou verzi rozpisu a tabulek (otevře se v novém okně)."
+                            style="background:#2196f3; margin-top:0;">🖨️ Pro tisk</button>
                     </div>
                 </div>
             </div>
@@ -1348,7 +1400,9 @@
                 </div>
                 <div id="acc-music" class="accordion-content">
                     <div class="form-group">
-                        <button class="btn-full" onclick="music.pickDirectory()" style="background:#444;">
+                        <button class="btn-full" onclick="music.pickDirectory()"
+                            title="Vyberte lokální složku s MP3 soubory pro přehrávání na pozadí."
+                            style="background:#444;">
                             📁 Vybrat složku s hudbou
                         </button>
                     </div>
@@ -1408,7 +1462,18 @@
                     Nastavení Aplikace <span>▼</span>
                 </div>
                 <div id="acc-app-settings" class="accordion-content">
-                    <h4 style="margin-bottom:10px; border:none;">Projekční Okno</h4>
+                    <h4 style="margin-bottom:10px; border:none;">Cloudová Synchronizace</h4>
+                    <div class="form-group">
+                        <label>Google Drive File ID (Hráči)</label>
+                        <input type="text" id="input-cloud-file-id" placeholder="ID souboru z Google Disku"
+                            oninput="admin.saveSettings(false)">
+                        <small style="color:#888; font-size:0.75em; display:block; margin-top:4px;">
+                            ID získáte z odkazu pro sdílení (např. 19QC...e1f3). Soubor musí být nastaven na „Kdokoli má
+                            odkaz“.
+                        </small>
+                    </div>
+
+                    <h4 style="margin: 20px 0 10px 0; border:none;">Projekční Okno</h4>
                     <div class="form-group">
                         <label>Vzhled (Téma)</label>
                         <select id="input-theme" onchange="admin.saveSettings(false); game.syncProjection()">
@@ -1429,6 +1494,15 @@
                         </div>
                         <small style="display: block; margin-top: 5px; color: #aaa; font-size: 0.75em;">Vložte tuto
                             adresu do OBS Browser Source nebo otevřete v novém okně.</small>
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <button class="btn-full" onclick="admin.openQRWindow()"
+                            title="Otevřít samostatné okno s QR kódem pro diváky."
+                            style="background: #e91e63; color: white; font-weight: bold;">📱 Veřejný QR kód</button>
+                    </div>
+                    <div class="form-group" style="margin-top: 10px; font-size: 0.8em; color: #888; text-align: right;">
+                        ID Relace: <span id="session-id-display"
+                            style="font-family: monospace; font-weight: bold; color: var(--accent-blue);">---</span>
                     </div>
                     <div class="form-group">
                         <label>Prodleva před další položkou (s)</label>
@@ -1475,6 +1549,8 @@
 
 
     <div id="admin-footer">
+        <div id="admin-footer-session"
+            style="font-weight:bold; color:var(--accent-blue); text-align:left; font-size:0.8em;">Relace: ---</div>
         <div id="admin-footer-progress">-</div>
         <div id="admin-footer-end">-</div>
         <div id="admin-footer-time">-</div>
@@ -1529,7 +1605,45 @@
 
     <script>
         let projectionWindow = null;
-        const syncChannel = new BroadcastChannel('scoreboard_sync');
+        let qrWindow = null;
+
+        // --- SESSION HANDLING ---
+        const SESSION_COLORS = {
+            "MODRÁ": "#2196f3",
+            "ZELENÁ": "#4caf50",
+            "ČERVENÁ": "#f44336",
+            "ŽLUTÁ": "#ffc107",
+            "ORANŽOVÁ": "#ff9800",
+            "FIALOVÁ": "#9c27b0",
+            "BÍLÁ": "#ffffff",
+            "ŠEDÁ": "#9e9e9e",
+            "RŮŽOVÁ": "#e91e63",
+            "TYRKYSOVÁ": "#00bcd4"
+        };
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const isPO = urlParams.has('projection');
+        const isQR = urlParams.get('mode') === 'qr';
+        let sessionId = urlParams.get('session');
+
+        if (!sessionId) {
+            // Check sessionStorage for persistence across refreshes
+            sessionId = sessionStorage.getItem('sb_session_id');
+            if (!sessionId) {
+                // Generate new hybrid session ID [Mnemonic]-[Random4]
+                const mnemonics = Object.keys(SESSION_COLORS);
+                const mnemonic = mnemonics[Math.floor(Math.random() * mnemonics.length)];
+                const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase();
+                sessionId = `${mnemonic}-${randomPart}`;
+            }
+        }
+
+        // Persist session ID for ZO refreshes (only if not a PO window)
+        if (!isPO) {
+            sessionStorage.setItem('sb_session_id', sessionId);
+        }
+
+        const syncChannel = new BroadcastChannel('sb_sync_' + sessionId);
         // --- DATA STRUCTURES ---
         const PHASES = [
             { id: 0, name: "Nastupuje", timeKey: 'setup' },
@@ -1572,7 +1686,8 @@
         };
 
         let state = {
-            isProjectionMode: window.location.search.includes('projection'),
+            isProjectionMode: isPO,
+            sessionId: sessionId,
             tournamentName: "",
             times: { setup: 10, play: 420, break: 105 }, // in seconds
             teams: [],
@@ -1581,6 +1696,7 @@
             volSignal: 0.5,
             volAnthem: 0.5,
             referees: [],
+            players: [],
             currentMatch: {
                 title: "",
                 homeName: "Domácí",
@@ -1603,6 +1719,7 @@
             schedule: [],
             activeMatchIndex: -1, // Track which match from schedule is active
             theme: "dark", // Default to dark for better initial projection appearance
+            cloudFileId: "", // Google Drive File ID for players database
             poTransitionActive: false,
             poTransitionData: null,
             poTransitionDelay: 10,
@@ -1675,10 +1792,30 @@
                         const timeEl = document.getElementById('p-footer-time');
                         if (timeEl) timeEl.innerText = `${dateStr}\u00A0\u00A0\u00A0\u00A0${now.toLocaleTimeString('cs-CZ')}`;
                     }, 1000);
+                    ui.updateProjection();
                     return;
                 }
 
                 try {
+                    // Hybrid Session ID Branding
+                    const colorCode = state.sessionId.split('-')[0];
+                    const stripeColor = SESSION_COLORS[colorCode] || 'transparent';
+                    const stripe = document.getElementById('admin-header-stripe');
+                    if (stripe) {
+                        stripe.style.background = stripeColor;
+                        stripe.style.display = 'block';
+                    }
+
+                    // Display Session ID in settings
+                    const sidDisp = document.getElementById('session-id-display');
+                    if (sidDisp) sidDisp.innerText = state.sessionId;
+
+                    // Update the URL display for OBS/copying
+                    const purlDisp = document.getElementById('projection-url-display');
+                    if (purlDisp) {
+                        purlDisp.value = window.location.origin + window.location.pathname + '?projection&session=' + state.sessionId;
+                    }
+
                     admin.loadFromStorage();
                     ui.renderSchedule();
                     ui.render();
@@ -2120,7 +2257,7 @@
                 state.volAnthem = parseFloat(document.getElementById('input-vol-anthem').value);
                 state.showFooter = document.getElementById('input-show-footer').checked;
                 state.theme = document.getElementById('input-theme').value;
-                state.poTransitionDelay = Math.max(1, Math.min(30, parseInt(document.getElementById('input-po-delay').value || 10)));
+                state.cloudFileId = document.getElementById('input-cloud-file-id').value.trim();
 
                 const fileInput = document.getElementById('input-audio-file');
                 if (fileInput.files.length > 0) {
@@ -2194,6 +2331,93 @@
                 state.referees.forEach((ref, idx) => {
                     admin.renderIdentityRow(refList, ref, idx, 'ref');
                 });
+
+                // Players
+                const playerList = document.getElementById('players-input-list');
+                if (playerList) {
+                    playerList.innerHTML = "";
+                    state.players.forEach((player, idx) => {
+                        admin.renderPlayerRow(playerList, player, idx);
+                    });
+                }
+            },
+
+            renderPlayerRow: (container, item, index) => {
+                const div = document.createElement('div');
+                div.className = "player-input-row";
+                div.style.display = "flex";
+                div.style.gap = "5px";
+                div.style.alignItems = "center";
+                div.style.marginBottom = "8px";
+                div.style.padding = "8px";
+                div.style.background = "#333";
+                div.style.borderRadius = "4px";
+
+                const label = document.createElement('span');
+                label.style.width = "40px";
+                label.style.fontSize = "0.7em";
+                label.style.color = "#888";
+                label.innerText = "#" + (index + 1);
+
+                // Surname
+                const surnameInput = document.createElement('input');
+                surnameInput.type = "text";
+                surnameInput.placeholder = "Příjmení";
+                surnameInput.value = item.surname || "";
+                surnameInput.style.flex = "2";
+                surnameInput.oninput = () => {
+                    item.surname = surnameInput.value;
+                    admin.saveToStorage(); game.syncProjection();
+                };
+
+                // Name
+                const nameInput = document.createElement('input');
+                nameInput.type = "text";
+                nameInput.placeholder = "Jméno";
+                nameInput.value = item.firstName || "";
+                nameInput.style.flex = "2";
+                nameInput.oninput = () => {
+                    item.firstName = nameInput.value;
+                    admin.saveToStorage(); game.syncProjection();
+                };
+
+                // UCI-ID
+                const uciInput = document.createElement('input');
+                uciInput.type = "text";
+                uciInput.placeholder = "UCI-ID";
+                uciInput.value = item.uciId || "";
+                uciInput.style.flex = "3";
+                uciInput.maxLength = 11;
+                uciInput.oninput = () => {
+                    const newVal = uciInput.value.trim();
+                    // Basic validation: check if UCI-ID is already taken by ANOTHER player
+                    if (newVal && state.players.some(p => p.uciId === newVal && p.id !== item.id)) {
+                        uciInput.style.border = "1px solid red";
+                    } else {
+                        uciInput.style.border = "";
+                        item.uciId = newVal;
+                        // If UCI-ID is set, we could potentially use it as ID, 
+                        // but it's safer to keep the persistent internal ID for references 
+                        // and just use UCI-ID for reconciling during import/export.
+                        admin.saveToStorage(); game.syncProjection();
+                    }
+                };
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = "small-btn btn-red";
+                removeBtn.innerText = "x";
+                removeBtn.onclick = () => {
+                    state.players = state.players.filter(p => p.id !== item.id);
+                    admin.renderIdentityInputs();
+                    admin.saveToStorage(); game.syncProjection();
+                };
+
+                div.appendChild(label);
+                div.appendChild(surnameInput);
+                div.appendChild(nameInput);
+                div.appendChild(uciInput);
+                div.appendChild(removeBtn);
+                container.appendChild(div);
             },
 
             renderIdentityRow: (container, item, index, type) => {
@@ -2258,6 +2482,323 @@
                 state.referees.push({ id, name: "" });
                 admin.renderIdentityInputs();
                 admin.saveToStorage(); game.syncProjection();
+            },
+
+            addPlayerSlot: () => {
+                const id = "player_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+                state.players.push({ id, surname: "", firstName: "", uciId: "" });
+                admin.renderIdentityInputs();
+                admin.saveSettings(false);
+            },
+
+            // SHA-256 Hash with fallback for non-secure contexts (local file://)
+            _hash: async (text) => {
+                try {
+                    if (window.crypto && crypto.subtle) {
+                        const msgUint8 = new TextEncoder().encode(text);
+                        const hashBuffer = await crypto.subtle.digest('SHA-256', msgUint8);
+                        const hashArray = Array.from(new Uint8Array(hashBuffer));
+                        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+                    }
+                } catch (e) { console.warn("Crypto API failed, using fallback."); }
+
+                // Fallback: Simple deterministic "hash" for deterrent purposes 
+                // ONLY used when modern Crypto API is unavailable (e.g. local file)
+                let h = 0;
+                for (let i = 0; i < text.length; i++) {
+                    h = ((h << 5) - h) + text.charCodeAt(i);
+                    h |= 0;
+                }
+                return "fallback_" + Math.abs(h).toString(16);
+            },
+
+            openQRWindow: () => {
+                const url = window.location.origin + window.location.pathname + '?projection&mode=qr&session=' + state.sessionId;
+                qrWindow = window.open(url, 'sb_qr_' + state.sessionId, 'width=600,height=800');
+            },
+
+            // BAKED-IN PASSWORD HASHES
+            _targetHash: "39a2c54c5bdaad1c10d81f97243bc7c4c90dbb1ed7c6526886dc243259dd0310",
+            _fallbackHash: "fallback_5076cf47", // "KolovaOlomouc1962"
+
+            // Reusable admin verification
+            verifyAdminPassword: async () => {
+                const pass = prompt("Zadejte administrační heslo:");
+                if (!pass) return false;
+                const hashed = await admin._hash(pass);
+                if (hashed === admin._targetHash || hashed === admin._fallbackHash) return true;
+                alert("Špatné heslo. Přístup odepřen.");
+                return false;
+            },
+
+            exportPlayersWithPassword: async () => {
+                if (await admin.verifyAdminPassword()) {
+                    admin.exportPlayers();
+                }
+            },
+
+            updatePlayersFromCloud: async () => {
+                let fileId = state.cloudFileId;
+                if (!fileId) {
+                    alert("Chybí Google Drive File ID v nastavení aplikace.");
+                    toggleAccordion('acc-app-settings');
+                    return;
+                }
+
+                // If user pasted a full URL, try to extract the ID
+                if (fileId.includes("drive.google.com")) {
+                    const match = fileId.match(/\/d\/([a-zA-Z0-9_-]+)/) || fileId.match(/[?&]id=([a-zA-Z0-9_-]+)/);
+                    if (match && match[1]) {
+                        fileId = match[1];
+                        console.log("Extrahováno ID z URL:", fileId);
+                    }
+                }
+
+                const btn = document.querySelector('button[onclick="admin.updatePlayersFromCloud()"]');
+                const originalText = btn.innerText;
+                btn.innerText = "⏳ Stahování...";
+                btn.disabled = true;
+
+                try {
+                    // Try multiple Google Drive URL formats
+                    const methods = [
+                        // Method 1: Direct download link
+                        `https://drive.google.com/uc?export=download&id=${fileId}`,
+                        // Method 2: Alternative format
+                        `https://drive.usercontent.google.com/download?id=${fileId}&export=download`,
+                        // Method 3: Via CORS proxy
+                        `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://drive.google.com/uc?export=download&id=${fileId}`)}`
+                    ];
+
+                    let lastError = null;
+                    let imported = null;
+
+                    for (let i = 0; i < methods.length; i++) {
+                        const url = methods[i];
+                        try {
+                            console.log(`Pokus ${i + 1}/${methods.length}:`, url);
+                            const resp = await fetch(url);
+                            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+                            const text = await resp.text();
+                            if (text.trim().startsWith('<')) throw new Error("HTML místo JSON");
+
+                            imported = JSON.parse(text);
+                            if (!Array.isArray(imported)) throw new Error("Není pole");
+
+                            console.log("✓ Úspěch metodou", i + 1);
+                            break;
+                        } catch (err) {
+                            lastError = err;
+                            console.warn(`✗ Metoda ${i + 1} selhala:`, err.message);
+                        }
+                    }
+
+                    if (!imported) {
+                        throw new Error(`Všechny metody selhaly.\n\nPoslední chyba: ${lastError?.message}\n\nZkontrolujte File ID a sdílení.`);
+                    }
+
+                    // Reuse the existing conflict logic
+                    admin.importPlayersData(imported);
+
+                } catch (err) {
+                    alert("Chyba při aktualizaci z cloudu: " + err.message);
+                } finally {
+                    btn.innerText = originalText;
+                    btn.disabled = false;
+                }
+            },
+
+            // Helper to handle data without File object
+            importPlayersData: (imported) => {
+                const conflicts = [];
+                const newEntries = [];
+
+                imported.forEach(pImp => {
+                    const byUci = pImp.uciId ? state.players.find(p => p.uciId === pImp.uciId) : null;
+                    const byName = state.players.find(p =>
+                        p.surname?.toLowerCase() === pImp.surname?.toLowerCase() &&
+                        p.firstName?.toLowerCase() === pImp.firstName?.toLowerCase()
+                    );
+
+                    if (byUci || byName) {
+                        conflicts.push({
+                            imported: pImp,
+                            existing: byUci || byName,
+                            type: byUci ? 'uci' : 'name',
+                            choice: 'keep'
+                        });
+                    } else {
+                        newEntries.push(pImp);
+                    }
+                });
+
+                if (conflicts.length > 0) {
+                    admin.showConflictReview(conflicts, newEntries);
+                } else {
+                    newEntries.forEach(p => {
+                        if (!p.id) p.id = "player_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+                        state.players.push(p);
+                    });
+                    admin.renderIdentityInputs();
+                    admin.saveToStorage(); game.syncProjection();
+                    alert(`Importováno ${newEntries.length} nových hráčů.`);
+                }
+            },
+
+            exportPlayers: () => {
+                if (state.players.length === 0) {
+                    alert("Seznam hráčů je prázdný.");
+                    return;
+                }
+                const dataStr = JSON.stringify(state.players, null, 2);
+                const blob = new Blob([dataStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.download = `CycleBall_UCI-ID.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            },
+
+            importPlayers: (input) => {
+                const file = input.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const imported = JSON.parse(e.target.result);
+                        if (!Array.isArray(imported)) throw new Error("Neplatný formát dat.");
+
+                        const conflicts = [];
+                        const newEntries = [];
+
+                        imported.forEach(pImp => {
+                            // Find conflicts by UCI or Name
+                            const byUci = pImp.uciId ? state.players.find(p => p.uciId === pImp.uciId) : null;
+                            const byName = state.players.find(p =>
+                                p.surname?.toLowerCase() === pImp.surname?.toLowerCase() &&
+                                p.firstName?.toLowerCase() === pImp.firstName?.toLowerCase()
+                            );
+
+                            if (byUci || byName) {
+                                conflicts.push({
+                                    imported: pImp,
+                                    existing: byUci || byName,
+                                    type: byUci ? 'uci' : 'name',
+                                    choice: 'keep' // Default choice
+                                });
+                            } else {
+                                newEntries.push(pImp);
+                            }
+                        });
+
+                        if (conflicts.length > 0) {
+                            admin.showConflictReview(conflicts, newEntries);
+                        } else {
+                            // No conflicts, just merge
+                            newEntries.forEach(p => {
+                                if (!p.id) p.id = "player_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+                                state.players.push(p);
+                            });
+                            admin.renderIdentityInputs();
+                            admin.saveToStorage(); game.syncProjection();
+                            alert(`Importováno ${newEntries.length} nových hráčů.`);
+                        }
+                    } catch (err) {
+                        alert("Chyba při importu: " + err.message);
+                    }
+                    input.value = "";
+                };
+                reader.readAsText(file);
+            },
+
+            showConflictReview: (conflicts, newEntries) => {
+                const modal = document.getElementById('modal-player-conflicts');
+                const container = document.getElementById('conflict-list-container');
+                container.innerHTML = "";
+                modal.style.display = 'flex';
+
+                conflicts.forEach((conf, idx) => {
+                    const row = document.createElement('div');
+                    row.className = "conflict-row";
+
+                    const headerTxt = conf.type === 'uci' ? `Shoda v UCI-ID: ${conf.imported.uciId}` : `Shoda ve jméně: ${conf.imported.surname} ${conf.imported.firstName}`;
+
+                    row.innerHTML = `
+                        <div class="conflict-header">${headerTxt}</div>
+                        <div class="conflict-grid">
+                            <div class="conflict-cell">
+                                <span class="conflict-label">Stávající v SB</span>
+                                <div class="conflict-value">${conf.existing.surname} ${conf.existing.firstName}</div>
+                                <div class="conflict-value" style="font-size:0.8em; color:#888;">UCI: ${conf.existing.uciId || "-"}</div>
+                            </div>
+                            <div class="conflict-cell" style="border-left:1px solid #333;">
+                                <span class="conflict-label">V importovaném souboru</span>
+                                <div class="conflict-value ${conf.existing.surname !== conf.imported.surname || conf.existing.firstName !== conf.imported.firstName ? 'val-diff' : ''}">
+                                    ${conf.imported.surname} ${conf.imported.firstName}
+                                </div>
+                                <div class="conflict-value ${conf.existing.uciId !== conf.imported.uciId ? 'val-diff' : ''}" style="font-size:0.8em;">
+                                    UCI: ${conf.imported.uciId || "-"}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="conflict-choice" id="choice-group-${idx}">
+                            <button class="choice-btn active" onclick="admin.setConflictChoice(${idx}, 'keep')"
+                                title="Data v aplikaci SB zůstanou beze změny. Ignorovat data z cloudu/souboru.">Ponechat původní</button>
+                            <button class="choice-btn" onclick="admin.setConflictChoice(${idx}, 'update')"
+                                title="Aktualizovat stávajícího hráče v SB daty z cloudu/souboru.">Přepsat z cloudu</button>
+                            <button class="choice-btn" onclick="admin.setConflictChoice(${idx}, 'both')"
+                                title="V SB zůstane stávající záznam a zároveň se vytvoří nový z importu (budou tam oba).">Ponechat oba</button>
+                        </div>
+                    `;
+                    container.appendChild(row);
+                });
+
+                // Attach resolution data
+                admin._pendingImport = { conflicts, newEntries };
+
+                document.getElementById('btn-resolve-all').onclick = () => {
+                    const data = admin._pendingImport;
+                    data.conflicts.forEach(c => {
+                        if (c.choice === 'update') {
+                            Object.assign(c.existing, c.imported);
+                        } else if (c.choice === 'both') {
+                            const p = { ...c.imported };
+                            p.id = "player_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+                            state.players.push(p);
+                        }
+                        // 'keep' does nothing
+                    });
+
+                    data.newEntries.forEach(p => {
+                        if (!p.id) p.id = "player_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+                        state.players.push(p);
+                    });
+
+                    modal.style.display = 'none';
+                    admin.renderIdentityInputs();
+                    admin.saveToStorage(); game.syncProjection();
+                    alert(`Import dokončen.`);
+                };
+            },
+
+            setConflictChoice: (idx, choice) => {
+                admin._pendingImport.conflicts[idx].choice = choice;
+                const group = document.getElementById(`choice-group-${idx}`);
+                const buttons = group.querySelectorAll('.choice-btn');
+                buttons.forEach(btn => btn.classList.remove('active'));
+
+                if (choice === 'keep') buttons[0].classList.add('active');
+                else if (choice === 'update') buttons[1].classList.add('active');
+                else if (choice === 'both') buttons[2].classList.add('active');
+            },
+
+            cancelConflictReview: () => {
+                document.getElementById('modal-player-conflicts').style.display = 'none';
+                admin._pendingImport = null;
             },
 
             propagateRenames: (oldList, newList, type) => {
@@ -3091,6 +3632,7 @@
                     if (typeof parsed.volSignal !== 'undefined') state.volSignal = parsed.volSignal;
                     if (typeof parsed.volAnthem !== 'undefined') state.volAnthem = parsed.volAnthem;
                     if (parsed.referees) state.referees = parsed.referees;
+                    if (parsed.players) state.players = parsed.players;
                     if (parsed.schedule) state.schedule = parsed.schedule;
                     if (parsed.audioData) state.audioData = parsed.audioData;
                     if (parsed.theme) state.theme = parsed.theme;
@@ -3238,7 +3780,9 @@
 
                 // Update projection URL display
                 const urlDisp = document.getElementById('projection-url-display');
-                if (urlDisp) urlDisp.value = window.location.origin + window.location.pathname + '?projection';
+                if (urlDisp) {
+                    urlDisp.value = window.location.origin + window.location.pathname + '?projection&session=' + state.sessionId;
+                }
 
                 ui.updateDurationHints(); // INIT DURATION HINTS
 
@@ -3736,9 +4280,11 @@
                 const prog = document.getElementById('admin-footer-progress');
                 const end = document.getElementById('admin-footer-end');
                 const time = document.getElementById('admin-footer-time');
+                const sess = document.getElementById('admin-footer-session');
                 if (prog) prog.innerText = telemetry.progress;
                 if (end) end.innerText = telemetry.end;
                 if (time) time.innerText = telemetry.time;
+                if (sess) sess.innerText = `Relace: ${state.sessionId}`;
             },
             render: () => {
                 try {
@@ -4264,6 +4810,37 @@
             updateProjection: () => {
                 try {
                     if (!state.isProjectionMode) return;
+
+                    const pLayout = document.getElementById('projection-layout');
+                    const qrLayout = document.getElementById('qr-layout');
+
+                    if (isQR) {
+                        if (pLayout) pLayout.style.display = 'none';
+                        if (qrLayout) {
+                            qrLayout.style.display = 'flex';
+                            document.getElementById('qr-tournament-name').innerText = state.tournamentName || "SB Scoreboard";
+                            document.getElementById('qr-session-id').innerText = state.sessionId;
+
+                            // Generate QR Code if empty
+                            const container = document.getElementById('qr-container');
+                            if (container && container.innerHTML === "") {
+                                const poUrl = window.location.origin + window.location.pathname + '?projection&session=' + state.sessionId;
+                                new QRCode(container, {
+                                    text: poUrl,
+                                    width: Math.min(window.innerWidth, window.innerHeight) * 0.6,
+                                    height: Math.min(window.innerWidth, window.innerHeight) * 0.6,
+                                    colorDark: "#000000",
+                                    colorLight: "#ffffff",
+                                    correctLevel: QRCode.CorrectLevel.H
+                                });
+                            }
+                        }
+                        return;
+                    }
+
+                    if (pLayout) pLayout.style.display = 'grid';
+                    if (qrLayout) qrLayout.style.display = 'none';
+
                     console.log("UI: updateProjection start");
 
                     const usedState = (state.poTransitionActive && state.poTransitionData) ? state.poTransitionData : state;
@@ -4432,8 +5009,8 @@
         }
 
         function openProjectionWindow() {
-            const url = window.location.origin + window.location.pathname + '?projection';
-            projectionWindow = window.open(url, "ScoreboardProjection", "width=800,height=600");
+            const url = window.location.origin + window.location.pathname + '?projection&session=' + state.sessionId;
+            projectionWindow = window.open(url, "ScoreboardProjection_" + state.sessionId, "width=800,height=600");
             if (!projectionWindow) {
                 alert("Vyskakovací okno bylo zablokováno. Prosím povolte jej pro tuto stránku.");
             } else {
@@ -4454,6 +5031,125 @@
         window.addEventListener('load', game.init);
 
     </script>
+
+    <!-- Conflict Resolution Modal -->
+    <div id="modal-player-conflicts" class="modal-overlay"
+        style="display:none; z-index: 10000; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); display:none; align-items:center; justify-content:center;">
+        <div
+            style="background:var(--bg-dark); border:1px solid #444; width:90%; max-width:800px; max-height:85vh; border-radius:8px; display:flex; flex-direction:column; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+            <div
+                style="padding:20px; border-bottom:1px solid #333; display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="margin:0; color:var(--accent-blue);">⚠️ Revize konfliktů v databázi</h3>
+                <span style="font-size:0.8em; color:#888;">Porovnejte stávající data s importem</span>
+            </div>
+
+            <div id="conflict-list-container" style="flex:1; overflow-y:auto; padding:20px;">
+                <!-- Conflicts will be rendered here -->
+            </div>
+
+            <div
+                style="padding:15px; border-top:1px solid #333; display:flex; justify-content:flex-end; gap:10px; background:#1a1a1a; border-bottom-left-radius:8px; border-bottom-right-radius:8px;">
+                <button class="small-btn btn-yellow" onclick="admin.cancelConflictReview()">Zrušit import</button>
+                <button class="small-btn btn-green" id="btn-resolve-all" style="padding:8px 20px;">Dokončit import
+                    ✅</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PUBLIC QR CODE LAYOUT (PO2) -->
+    <div id="qr-layout"
+        style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#1a1a1a; color:white; padding:20px; text-align:center;">
+        <h1 id="qr-tournament-name" style="font-size:3.5vw; margin-bottom:2vh; color:var(--accent-blue);">SB Scoreboard
+        </h1>
+        <div id="qr-container"
+            style="background:white; padding:2vw; border-radius:1vw; box-shadow:0 1vw 3vw rgba(0,0,0,0.5);"></div>
+        <div style="margin-top:4vh; font-size:2vw;">
+            <p>Naskenujte pro sledování výsledků na mobilu</p>
+            <p style="font-size:1.5vw; color:#888; margin-top:1vh;">Relace: <span id="qr-session-id"
+                    style="color:var(--accent-blue); font-weight:bold;">---</span></p>
+        </div>
+    </div>
+
+    <style>
+        .conflict-row {
+            background: #252525;
+            border: 1px solid #444;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .conflict-header {
+            background: #333;
+            padding: 8px 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+            color: #ccc;
+            border-bottom: 1px solid #444;
+        }
+
+        .conflict-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1px;
+            background: #444;
+        }
+
+        .conflict-cell {
+            background: #252525;
+            padding: 12px;
+        }
+
+        .conflict-label {
+            display: block;
+            font-size: 0.7em;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+
+        .conflict-value {
+            font-size: 0.95em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .conflict-choice {
+            display: flex;
+            gap: 5px;
+            padding: 10px;
+            background: #1a1a1a;
+            justify-content: flex-end;
+        }
+
+        .choice-btn {
+            background: #333;
+            border: 1px solid #555;
+            color: #eee;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            transition: 0.2s;
+        }
+
+        .choice-btn:hover {
+            background: #444;
+        }
+
+        .choice-btn.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+            font-weight: bold;
+        }
+
+        .val-diff {
+            color: #ffab40;
+            font-weight: bold;
+        }
+    </style>
 </body>
 
 </html>
