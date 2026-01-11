@@ -951,6 +951,64 @@
         .mode-toggle-btn.active .icon-sq {
             background: rgba(255, 255, 255, 0.2);
         }
+
+        /* Suggestion & Chips */
+        .suggestion-container {
+            position: relative;
+            width: 100%;
+        }
+
+        .suggestion-box {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #222;
+            border: 1px solid #444;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+        }
+
+        .suggestion-item {
+            padding: 8px;
+            cursor: pointer;
+            font-size: 0.8em;
+            border-bottom: 1px solid #333;
+        }
+
+        .suggestion-item:hover {
+            background: #333;
+        }
+
+        .suggestion-item.add-new {
+            color: var(--accent-blue);
+            font-weight: bold;
+        }
+
+        .player-chip {
+            background: #444;
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            margin: 2px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .remove-chip {
+            cursor: pointer;
+            color: #888;
+            font-weight: bold;
+        }
+
+        .remove-chip:hover {
+            color: #ff4d4d;
+        }
     </style>
 </head>
 
@@ -1085,34 +1143,110 @@
                         </div>
                     </div>
 
-                    <h4 style="margin: 15px 0 10px 0; border: none; padding: 0;">Bodování</h4>
-                    <div style="display: flex; gap: 10px; margin-bottom: 5px;">
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label style="font-size: 0.85em;">Výhra</label>
-                            <input type="number" id="rule-win" value="3" min="0" style="width: 100%;"
-                                oninput="admin.saveSettings(false)">
+                    <div class="form-group" style="display: flex; gap: 10px;">
+                        <div style="flex: 1.5;">
+                            <label>Datum konání</label>
+                            <input type="date" id="input-tournament-date" oninput="admin.saveSettings(false)">
                         </div>
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label style="font-size: 0.85em;">Remíza</label>
-                            <input type="number" id="rule-draw" value="1" min="0" style="width: 100%;"
-                                oninput="admin.saveSettings(false)">
-                        </div>
-                        <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                            <label style="font-size: 0.85em;">Prohra</label>
-                            <input type="number" id="rule-loss" value="0" min="0" style="width: 100%;"
+                        <div style="flex: 2;">
+                            <label>Místo konání</label>
+                            <input type="text" id="input-tournament-location" placeholder="Město, hala..."
                                 oninput="admin.saveSettings(false)">
                         </div>
                     </div>
 
-                    <div class="form-group" style="margin-top: 15px; text-align: left;">
+                    <div class="form-group">
+                        <label>Pořádající oddíl / spolek</label>
+                        <select id="input-tournament-organizer" onchange="admin.saveSettings(false)">
+                            <option value="">-- vybrat ze seznamu --</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Hrací plocha</label>
+                        <input type="text" id="input-pitch-size" placeholder="např. 11 x 14 (m)"
+                            oninput="admin.saveSettings(false)">
+                    </div>
+
+                    <h4 style="margin: 20px 0 10px 0; border: none; padding: 0;">Oficiální činitelé</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group">
+                            <label>Hlavní rozhodčí</label>
+                            <input type="text" id="official-chief-referee" oninput="admin.saveSettings(false)">
+                        </div>
+                        <div class="form-group">
+                            <label>Zapisovatel</label>
+                            <input type="text" id="official-recorder" oninput="admin.saveSettings(false)">
+                        </div>
+                        <div class="form-group">
+                            <label>Časoměřič</label>
+                            <input type="text" id="official-timekeeper" oninput="admin.saveSettings(false)">
+                        </div>
+                        <div class="form-group" style="visibility:hidden"> <!-- Spacer for grid balance if needed -->
+                            <label>Ostatní</label>
+                            <input type="text">
+                        </div>
+                    </div>
+
+                    <h4 style="margin: 20px 0 10px 0; border: none; padding: 0;">Sbor rozhodčích (pro zápasy)</h4>
+                    <div class="form-group">
+                        <div id="referees-input-list"
+                            style="display:flex; flex-direction:column; gap:5px; margin-bottom:10px;">
+                            <!-- Dynamically populated numbered inputs -->
+                        </div>
+                        <button class="small-btn btn-green" onclick="admin.addRefereeSlot()"
+                            title="Přidá nový řádek pro zadání jména rozhodčího.">+ Přidat rozhodčího do sboru</button>
+                    </div>
+
+                    <h4 style="margin: 20px 0 10px 0; border: none; padding: 0;">Různé</h4>
+                    <div class="form-group">
+                        <div id="misc-input-list"
+                            style="display:flex; flex-direction:column; gap:5px; margin-bottom:10px;">
+                            <!-- Dynamically populated -->
+                        </div>
+                        <button class="small-btn btn-green" onclick="admin.addMiscSlot()"
+                            title="Přidá nový řádek pro doplňující informace o turnaji.">+ Přidat řádek</button>
+                    </div>
+
+                    <div
+                        style="display: flex; align-items: center; justify-content: space-between; margin: 20px 0 10px 0;">
+                        <h4 style="margin: 0; border: none; padding: 0;">Bodování a Pravidla</h4>
                         <label
-                            style="display: flex; align-items: center; gap: 8px; cursor: pointer; justify-content: flex-start;">
-                            <input type="checkbox" id="rule-mini-tables" onchange="admin.saveSettings(false)"
-                                style="margin: 0; width: auto;">
-                            Vzájemné zápasy (Minitabulky)
+                            style="font-size: 0.75em; color: var(--accent-orange); display: flex; align-items: center; gap: 5px; cursor: pointer; background: #333; padding: 2px 8px; border-radius: 4px; border: 1px solid #444;">
+                            <input type="checkbox" id="rule-lock-toggle" onchange="admin.toggleRulesLock()"
+                                style="width: auto; margin: 0;"> 🔓 Upravit
                         </label>
-                        <small style="color: #888; display: block; margin-top: 4px;">Při rovnosti bodů rozhodují
-                            vzájemné zápasy před celkovým skóre.</small>
+                    </div>
+
+                    <div id="rules-container" style="opacity: 0.6; pointer-events: none; transition: all 0.3s ease;">
+                        <div style="display: flex; gap: 10px; margin-bottom: 5px;">
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label style="font-size: 0.85em;">Výhra</label>
+                                <input type="number" id="rule-win" value="3" min="0" style="width: 100%;"
+                                    oninput="admin.saveSettings(false)" disabled>
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label style="font-size: 0.85em;">Remíza</label>
+                                <input type="number" id="rule-draw" value="1" min="0" style="width: 100%;"
+                                    oninput="admin.saveSettings(false)" disabled>
+                            </div>
+                            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                                <label style="font-size: 0.85em;">Prohra</label>
+                                <input type="number" id="rule-loss" value="0" min="0" style="width: 100%;"
+                                    oninput="admin.saveSettings(false)" disabled>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-top: 15px; text-align: left;">
+                            <label
+                                style="display: flex; align-items: center; gap: 8px; cursor: pointer; justify-content: flex-start;">
+                                <input type="checkbox" id="rule-mini-tables" onchange="admin.saveSettings(false)"
+                                    style="margin: 0; width: auto;" disabled>
+                                Vzájemné zápasy (Minitabulky)
+                            </label>
+                            <small style="color: #888; display: block; margin-top: 4px;">Při rovnosti bodů rozhodují
+                                vzájemné zápasy před celkovým skóre.</small>
+                        </div>
                     </div>
 
                 </div>
@@ -1161,7 +1295,7 @@
             <!-- 2. Team Logos & Anthems -->
             <div class="accordion">
                 <div class="accordion-header" onclick="toggleAccordion('acc-logos')">
-                    Družstva a Rozhodčí <span>▼</span>
+                    Družstva <span>▼</span>
                 </div>
                 <div id="acc-logos" class="accordion-content">
                     <div class="form-group">
@@ -1176,15 +1310,6 @@
                     <div id="team-logo-list"
                         style="margin-bottom:15px; border:1px solid #444; padding:10px; border-radius:4px; max-height:250px; overflow-y:auto;">
                         <!-- logo items here -->
-                    </div>
-                    <div class="form-group">
-                        <label>Seznam Rozhodčích</label>
-                        <div id="referees-input-list"
-                            style="display:flex; flex-direction:column; gap:5px; margin-bottom:10px;">
-                            <!-- Dynamically populated numbered inputs -->
-                        </div>
-                        <button class="small-btn btn-green" onclick="admin.addRefereeSlot()"
-                            title="Přidá nový řádek pro zadání jména rozhodčího.">+ Přidat rozhodčího</button>
                     </div>
                 </div>
             </div>
@@ -1380,13 +1505,26 @@
                     Exporty <span>▼</span>
                 </div>
                 <div id="acc-export" class="accordion-content">
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <h4 style="margin: 0 0 10px 0; border: none; padding: 0; color: #4caf50;">Vzor základní</h4>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom: 20px;">
                         <button class="btn-full" onclick="exporter.toXLSX()"
                             title="Exportovat rozpis, tabulky a seznam hráčů do Excel souboru (.xlsx)."
                             style="background:#4caf50; margin-top:0;">📊 Excel</button>
                         <button class="btn-full" onclick="exporter.toPrintable()"
                             title="Vygenerovat tiskovou verzi rozpisu a tabulek (otevře se v novém okně)."
                             style="background:#2196f3; margin-top:0;">🖨️ Pro tisk</button>
+                    </div>
+
+                    <h4 style="margin: 0 0 10px 0; border: none; padding: 0; color: #888;">Vzor kolová 2022</h4>
+                    <div
+                        style="font-size: 0.8em; color: #666; font-style: italic; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px; border: 1px dashed #444; margin-bottom: 20px;">
+                        Tato sekce bude zprovozněna po implementaci herních schémat a importů pro rok 2022.
+                    </div>
+
+                    <h4 style="margin: 0 0 10px 0; border: none; padding: 0; color: #888;">Portál ČSC</h4>
+                    <div
+                        style="font-size: 0.8em; color: #666; font-style: italic; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px; border: 1px dashed #444;">
+                        Tato sekce bude zprovozněna v budoucnu pro přímou integraci s portálem ČSC.
                     </div>
                 </div>
             </div>
@@ -1668,9 +1806,26 @@
             }
         };
 
+        const CLUBS = [
+            "Lokomotiva Liberec",
+            "Mlékárna Olešnice cykloklub Svitávka",
+            "Sálová cyklistika Svitávka",
+            "SK Chodsko",
+            "SK SC PRIMA Nezamyslice",
+            "TJ Favorit Brno",
+            "TJ MILO Olomouc",
+            "TJ Pankrác Praha",
+            "TJ Sokol Šitbořice",
+            "TJ Sokol Zlín-Prštné",
+            "TJ Spartak Chrastava",
+            "TJ Spartak Přerov",
+            "TJ START Plzeň"
+        ];
+
         let state = {
             isProjectionMode: isPO,
             sessionId: sessionId,
+            isLoading: false,
             tournamentName: "",
             times: { setup: 10, play: 420, break: 105 }, // in seconds
             teams: [],
@@ -1723,7 +1878,18 @@
                 lossPoints: 0,
                 useMiniTables: false
             },
-            activeStandingsTab: 'standings' // 'standings' or 'cross'
+            activeStandingsTab: 'standings', // 'standings' or 'cross'
+            // Tournament Metadata
+            tournamentDate: new Date().toISOString().split('T')[0],
+            tournamentLocation: "",
+            tournamentOrganizer: "",
+            pitchSize: "11 x 14 (m)",
+            officialChiefReferee: "",
+            officialTimekeeper: "",
+            officialRecorder: "",
+            misc: [
+                { id: "misc_default_1", text: "Startovné družstev bylo uhrazeno. Náhrady rozhodčím byly vyplaceny podle STS ČSC." }
+            ] // { id: string, text: string }
         };
 
 
@@ -2203,6 +2369,7 @@
         // --- ADMIN HELPERS ---
         const admin = {
             saveSettings: (showAlert = true) => {
+                if (state.isLoading) return;
                 state.tournamentName = document.getElementById('input-tournament-name').value;
 
                 state.times.setup = Math.max(0, parseInt(document.getElementById('time-setup').value || 10));
@@ -2215,15 +2382,22 @@
                 state.rules.useMiniTables = document.getElementById('rule-mini-tables').checked;
 
                 // Save teams from dynamic list
-                state.teams = [];
                 const teamInputs = document.querySelectorAll('.team-name-input');
+                const newTeams = [];
                 teamInputs.forEach(input => {
                     const id = input.dataset.id;
                     const name = input.value.trim();
                     if (id) {
-                        state.teams.push({ id, name: name || "Družstvo" });
+                        // Find existing team to preserve playerIds etc.
+                        const existing = state.teams.find(t => t.id === id);
+                        newTeams.push({
+                            ...existing,
+                            id,
+                            name: name || "Družstvo"
+                        });
                     }
                 });
+                state.teams = newTeams;
 
                 // Save referees from dynamic list
                 state.referees = [];
@@ -2236,11 +2410,36 @@
                     }
                 });
 
+                // Save misc entries
+                const miscList = document.getElementById('misc-input-list');
+                if (miscList) {
+                    const miscInputs = miscList.querySelectorAll('.misc-name-input');
+                    if (miscInputs.length > 0) {
+                        state.misc = [];
+                        miscInputs.forEach(input => {
+                            const id = input.dataset.id;
+                            const text = input.value.trim();
+                            if (id) {
+                                state.misc.push({ id, text: text || "" });
+                            }
+                        });
+                    }
+                }
+
                 state.volSignal = parseFloat(document.getElementById('input-vol-signal').value);
                 state.volAnthem = parseFloat(document.getElementById('input-vol-anthem').value);
                 state.showFooter = document.getElementById('input-show-footer').checked;
                 state.theme = document.getElementById('input-theme').value;
                 state.cloudFileId = document.getElementById('input-cloud-file-id').value.trim();
+
+                // Metadata
+                state.tournamentDate = document.getElementById('input-tournament-date').value;
+                state.tournamentLocation = document.getElementById('input-tournament-location').value;
+                state.tournamentOrganizer = document.getElementById('input-tournament-organizer').value;
+                state.pitchSize = document.getElementById('input-pitch-size').value;
+                state.officialChiefReferee = document.getElementById('official-chief-referee').value;
+                state.officialTimekeeper = document.getElementById('official-timekeeper').value;
+                state.officialRecorder = document.getElementById('official-recorder').value;
 
                 const fileInput = document.getElementById('input-audio-file');
                 if (fileInput.files.length > 0) {
@@ -2269,6 +2468,19 @@
                     game.syncProjection();
                     if (showAlert) alert("Nastavení uloženo.");
                 }
+            },
+
+            toggleRulesLock: () => {
+                const unlocked = document.getElementById('rule-lock-toggle').checked;
+                const container = document.getElementById('rules-container');
+                const inputs = container.querySelectorAll('input');
+
+                container.style.opacity = unlocked ? "1" : "0.6";
+                container.style.pointerEvents = unlocked ? "auto" : "none";
+
+                inputs.forEach(input => {
+                    input.disabled = !unlocked;
+                });
             },
 
             formatTime: (totalSeconds) => {
@@ -2323,6 +2535,55 @@
                         admin.renderPlayerRow(playerList, player, idx);
                     });
                 }
+
+                // Miscellaneous Notes
+                const miscList = document.getElementById('misc-input-list');
+                if (miscList) {
+                    miscList.innerHTML = "";
+                    state.misc.forEach((item, idx) => {
+                        admin.renderMiscRow(miscList, item, idx);
+                    });
+                }
+            },
+
+            renderMiscRow: (container, item, index) => {
+                const div = document.createElement('div');
+                div.style.display = "flex";
+                div.style.gap = "5px";
+                div.style.alignItems = "center";
+                div.style.marginBottom = "5px";
+
+                const label = document.createElement('span');
+                label.style.width = "60px";
+                label.style.fontSize = "0.8em";
+                label.style.color = "#888";
+                label.innerText = "Pozn. " + (index + 1);
+
+                const input = document.createElement('input');
+                input.type = "text";
+                input.className = "misc-name-input";
+                input.dataset.id = item.id;
+                input.value = item.text || "";
+                input.placeholder = "Doplňující info...";
+                input.style.flex = "1";
+                input.oninput = () => {
+                    state.misc.find(m => m.id === item.id).text = input.value;
+                    admin.saveToStorage(); game.syncProjection();
+                };
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = "small-btn btn-red";
+                removeBtn.innerText = "x";
+                removeBtn.onclick = () => {
+                    state.misc = state.misc.filter(m => m.id !== item.id);
+                    admin.renderIdentityInputs();
+                    admin.saveToStorage(); game.syncProjection();
+                };
+
+                div.appendChild(label);
+                div.appendChild(input);
+                div.appendChild(removeBtn);
+                container.appendChild(div);
             },
 
             renderPlayerRow: (container, item, index) => {
@@ -2449,13 +2710,160 @@
 
                 div.appendChild(label);
                 div.appendChild(input);
+
+                if (type === 'team') {
+                    // Player selection UI
+                    const playerSection = document.createElement('div');
+                    playerSection.style.display = "flex";
+                    playerSection.style.flexDirection = "column";
+                    playerSection.style.flex = "1.5";
+                    playerSection.style.marginLeft = "10px";
+
+                    const chipsContainer = document.createElement('div');
+                    chipsContainer.className = "chips-container";
+                    chipsContainer.style.display = "flex";
+                    chipsContainer.style.flexWrap = "wrap";
+
+                    const suggestWrapper = document.createElement('div');
+                    suggestWrapper.className = "suggestion-container";
+
+                    const playerInput = document.createElement('input');
+                    playerInput.type = "text";
+                    playerInput.placeholder = "Hledat/přidat hráče...";
+                    playerInput.style.fontSize = "0.75em";
+                    playerInput.style.padding = "4px 8px";
+
+                    const suggestionBox = document.createElement('div');
+                    suggestionBox.className = "suggestion-box";
+
+                    playerInput.oninput = () => admin.showPlayerSuggestions(playerInput, suggestionBox, item, chipsContainer);
+                    playerInput.onblur = () => setTimeout(() => { suggestionBox.style.display = "none"; }, 200);
+
+                    suggestWrapper.appendChild(playerInput);
+                    suggestWrapper.appendChild(suggestionBox);
+                    playerSection.appendChild(chipsContainer);
+                    playerSection.appendChild(suggestWrapper);
+                    div.appendChild(playerSection);
+
+                    // Call this AFTER appending suggestWrapper so it can find it as a sibling
+                    admin.renderPlayerChips(chipsContainer, item);
+                }
+
                 div.appendChild(removeBtn);
                 container.appendChild(div);
             },
 
+            renderPlayerChips: (container, team) => {
+                container.innerHTML = "";
+                if (!team.playerIds) team.playerIds = [];
+                team.playerIds.forEach(pid => {
+                    const player = state.players.find(p => p.id === pid);
+                    if (player) {
+                        const chip = document.createElement('div');
+                        chip.className = "player-chip";
+                        chip.innerText = (player.surname || player.firstName || "Hráč");
+                        const remove = document.createElement('span');
+                        remove.className = "remove-chip";
+                        remove.innerText = "×";
+                        remove.onclick = (e) => {
+                            e.stopPropagation();
+                            team.playerIds = team.playerIds.filter(id => id !== pid);
+                            admin.renderPlayerChips(container, team);
+                            admin.saveToStorage(); game.syncProjection();
+                        };
+                        chip.appendChild(remove);
+                        container.appendChild(chip);
+                    }
+                });
+
+                // Toggle visibility of input field if it exists as next sibling
+                const wrapper = container.nextElementSibling;
+                if (wrapper && wrapper.classList.contains('suggestion-container')) {
+                    wrapper.style.display = (team.playerIds.length >= 2) ? "none" : "block";
+                }
+            },
+
+            showPlayerSuggestions: (input, suggestionBox, team, chipsContainer) => {
+                const val = input.value.trim().toLowerCase();
+                suggestionBox.innerHTML = "";
+                if (!val) {
+                    suggestionBox.style.display = "none";
+                    return;
+                }
+
+                const matches = state.players.filter(p =>
+                    (p.surname + " " + p.firstName + " " + (p.uciId || "")).toLowerCase().includes(val) &&
+                    !(team.playerIds || []).includes(p.id)
+                ).slice(0, 5);
+
+                matches.forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = "suggestion-item";
+                    item.innerText = `${p.surname} ${p.firstName} ${p.uciId ? `(${p.uciId})` : ""}`;
+                    item.onclick = () => {
+                        if (!team.playerIds) team.playerIds = [];
+                        if (team.playerIds.length < 2) {
+                            team.playerIds.push(p.id);
+                            input.value = "";
+                            suggestionBox.style.display = "none";
+                            admin.renderPlayerChips(chipsContainer, team);
+                            admin.saveToStorage(); game.syncProjection();
+                        } else {
+                            alert("Družstvo může mít maximálně 2 hráče.");
+                        }
+                    };
+                    suggestionBox.appendChild(item);
+                });
+
+                // Add "Add New Player" option
+                const addNew = document.createElement('div');
+                addNew.className = "suggestion-item add-new";
+                addNew.innerText = `+ Přidat jako nového hráče: "${input.value}"`;
+                addNew.onclick = () => {
+                    const id = "player_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+                    const parts = input.value.trim().split(/\s+/);
+                    const surname = parts[0] || "";
+                    const firstName = parts.slice(1).join(" ") || "";
+                    const newPlayer = { id, surname, firstName, uciId: "" };
+                    state.players.push(newPlayer);
+
+                    if (!team.playerIds) team.playerIds = [];
+                    if (team.playerIds.length < 2) {
+                        team.playerIds.push(id);
+                    }
+
+                    input.value = "";
+                    suggestionBox.style.display = "none";
+                    admin.renderPlayerChips(chipsContainer, team);
+                    admin.renderIdentityInputs(); // Refresh the main players list too
+                    admin.saveToStorage(); game.syncProjection();
+                };
+                suggestionBox.appendChild(addNew);
+                suggestionBox.style.display = "block";
+            },
+
+            getTeamName: (id) => {
+                const team = state.teams.find(t => t.id === id);
+                return team ? team.name : (id || "Tým");
+            },
+
+            getRefName: (id) => {
+                const ref = state.referees.find(r => r.id === id);
+                return ref ? ref.name : (id || "-");
+            },
+
+            getTeamPlayers: (teamId) => {
+                const team = state.teams.find(t => t.id === teamId);
+                if (!team || !team.playerIds || team.playerIds.length === 0) return "";
+                return team.playerIds.map(pid => {
+                    const p = state.players.find(x => x.id === pid);
+                    return p ? `${p.surname} ${p.firstName[0]}.` : "";
+                }).filter(n => n).join(", ");
+            },
+
             addTeamSlot: () => {
                 const id = "team_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
-                state.teams.push({ id, name: "" });
+                state.teams.push({ id, name: "", playerIds: [] });
                 admin.renderIdentityInputs();
                 admin.saveToStorage(); game.syncProjection();
             },
@@ -2463,6 +2871,13 @@
             addRefereeSlot: () => {
                 const id = "ref_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
                 state.referees.push({ id, name: "" });
+                admin.renderIdentityInputs();
+                admin.saveToStorage(); game.syncProjection();
+            },
+
+            addMiscSlot: () => {
+                const id = "misc_" + Date.now() + "_" + Math.floor(Math.random() * 1000);
+                state.misc.push({ id, text: "" });
                 admin.renderIdentityInputs();
                 admin.saveToStorage(); game.syncProjection();
             },
@@ -3598,6 +4013,7 @@
             },
 
             loadFromStorage: () => {
+                state.isLoading = true;
                 const loaded = localStorage.getItem('scoreboardState');
                 if (loaded) {
                     const parsed = JSON.parse(loaded);
@@ -3627,6 +4043,17 @@
                     if (typeof parsed.activeMatchIndex !== 'undefined') state.activeMatchIndex = parsed.activeMatchIndex;
                     if (parsed.currentMatch) state.currentMatch = parsed.currentMatch;
                     if (parsed.timer) state.timer = parsed.timer;
+                    if (parsed.misc && parsed.misc.length > 0) {
+                        state.misc = parsed.misc;
+                    }
+
+                    // Fallback to default if empty or only empty rows exist
+                    const hasData = state.misc && state.misc.some(m => m.text && m.text.trim().length > 0);
+                    if (!hasData) {
+                        state.misc = [
+                            { id: "misc_default_1", text: "Startovné družstev bylo uhrazeno. Náhrady rozhodčím byly vyplaceny podle STS ČSC." }
+                        ];
+                    }
 
                     if (typeof parsed.tournamentStartTime !== 'undefined') state.tournamentStartTime = parsed.tournamentStartTime;
                     if (typeof parsed.playTimeAccumulated !== 'undefined') state.playTimeAccumulated = parsed.playTimeAccumulated;
@@ -3720,6 +4147,28 @@
                 document.getElementById('time-break').value = state.times.break;
 
                 // Volume Controls
+                document.getElementById('input-cloud-file-id').value = state.cloudFileId || "";
+
+                // Metadata inputs
+                document.getElementById('input-tournament-date').value = state.tournamentDate || "";
+                document.getElementById('input-tournament-location').value = state.tournamentLocation || "";
+                document.getElementById('input-pitch-size').value = state.pitchSize || "11 x 14 (m)";
+                document.getElementById('official-chief-referee').value = state.officialChiefReferee || "";
+                document.getElementById('official-timekeeper').value = state.officialTimekeeper || "";
+                document.getElementById('official-recorder').value = state.officialRecorder || "";
+
+                // Populate and set organizer
+                const orgSelect = document.getElementById('input-tournament-organizer');
+                if (orgSelect) {
+                    orgSelect.innerHTML = '<option value="">-- vybrat ze seznamu --</option>';
+                    CLUBS.forEach(club => {
+                        const opt = document.createElement('option');
+                        opt.value = club;
+                        opt.innerText = club;
+                        orgSelect.appendChild(opt);
+                    });
+                    orgSelect.value = state.tournamentOrganizer || "";
+                }
                 document.getElementById('input-vol-signal').value = state.volSignal || 1.0;
                 document.getElementById('vol-signal-disp').innerText = Math.round((state.volSignal || 1.0) * 100);
                 document.getElementById('input-vol-anthem').value = state.volAnthem || 1.0;
@@ -3734,6 +4183,16 @@
                     document.getElementById('rule-loss').value = state.rules.lossPoints;
                     document.getElementById('rule-mini-tables').checked = !!state.rules.useMiniTables;
                 }
+
+                state.isLoading = false;
+
+                // Ensure Rules are locked on load
+                const lockToggle = document.getElementById('rule-lock-toggle');
+                if (lockToggle) {
+                    lockToggle.checked = false;
+                    admin.toggleRulesLock();
+                }
+
                 ui.updateFooterVisibility();
 
                 // Music Settings
@@ -4079,20 +4538,39 @@
             },
             toXLSX: () => {
                 const wb = XLSX.utils.book_new();
-                const data = state.schedule.map((m, i) => {
-                    const row = {
+
+                // --- Metadata Header for Excel ---
+                const metaRows = [
+                    [state.tournamentName || "Turnajový rozpis"],
+                    ["Pořadatel:", state.tournamentOrganizer || "-"],
+                    ["Datum:", state.tournamentDate ? new Date(state.tournamentDate).toLocaleDateString('cs-CZ') : "-"],
+                    ["Místo:", state.tournamentLocation || "-"],
+                    ["Plocha:", state.pitchSize || "-"],
+                    ["Hlavní rozhodčí:", state.officialChiefReferee || "-"],
+                    ["Časoměřič:", state.officialTimekeeper || "-"],
+                    ["Zapisovatel:", state.officialRecorder || "-"],
+                    ["Exportováno:", new Date().toLocaleString('cs-CZ')],
+                    [] // divider row
+                ];
+
+                const scheduleData = state.schedule.map((m, i) => {
+                    const homePlayers = m.type === 'match' ? admin.getTeamPlayers(m.home) : "";
+                    const guestPlayers = m.type === 'match' ? admin.getTeamPlayers(m.guest) : "";
+                    return {
                         "Pořadí": i + 1,
                         "Název / Skupina": m.title || "Match",
                         "Domácí": m.type === 'match' ? exporter.resolveName(m.home, 'team') : "-",
+                        "Hráči Domácí": homePlayers,
                         "Hosté": m.type === 'match' ? exporter.resolveName(m.guest, 'team') : "-",
+                        "Hráči Hosté": guestPlayers,
                         "Skóre": m.type === 'match' ? (m.homeScore !== null ? `${m.homeScore}:${m.guestScore}` : "-") : "-",
                         "Rozhodčí": m.type === 'match' ? exporter.resolveName(m.referee, 'ref') : "-",
                         "Délka (s)": m.duration || (m.type === 'match' ? (state.times.play * 2 + state.times.break) : 600)
                     };
-                    return row;
                 });
 
-                const ws = XLSX.utils.json_to_sheet(data);
+                const ws = XLSX.utils.aoa_to_sheet(metaRows);
+                XLSX.utils.sheet_add_json(ws, scheduleData, { origin: "A13" });
                 XLSX.utils.book_append_sheet(wb, ws, "Rozpis");
 
                 const filename = (state.tournamentName || "Export") + "_Rozpis.xlsx";
@@ -4119,7 +4597,53 @@
                 </style></head><body>`;
 
                 html += `<h1>${state.tournamentName || "Turnajový rozpis"}</h1>`;
-                html += `<div class="meta">Exportováno: ${new Date().toLocaleString('cs-CZ')}</div>`;
+                html += `<div class="meta" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:30px; background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
+                    <div>
+                        <strong>Pořadatel:</strong> ${state.tournamentOrganizer || "-"}<br>
+                        <strong>Datum:</strong> ${state.tournamentDate ? new Date(state.tournamentDate).toLocaleDateString('cs-CZ') : "-"}<br>
+                        <strong>Místo:</strong> ${state.tournamentLocation || "-"}<br>
+                        <strong>Plocha:</strong> ${state.pitchSize || "-"}
+                    </div>
+                    <div>
+                        <strong>Hlavní rozhodčí:</strong> ${state.officialChiefReferee || "-"}<br>
+                        <strong>Časoměřič:</strong> ${state.officialTimekeeper || "-"}<br>
+                        <strong>Zapisovatel:</strong> ${state.officialRecorder || "-"}
+                    </div>
+                    <div style="grid-column: span 2; margin-top:5px; pt:5px; border-top:1px solid #ddd; font-size:0.8em; color:#888;">
+                        Exportováno: ${new Date().toLocaleString('cs-CZ')}
+                    </div>
+                </div>`;
+
+                // --- NEW: Team Roster Table ---
+                if (state.teams.length > 0) {
+                    html += `<h2 style="margin-top:20px;">Soupisky družstev</h2>`;
+                    html += `<table style="margin-top:10px;"><thead><tr>
+                        <th style="width:40px">#</th>
+                        <th>Družstvo</th>
+                        <th>Hráč 1</th>
+                        <th style="width:100px">UCI-ID 1</th>
+                        <th>Hráč 2</th>
+                        <th style="width:100px">UCI-ID 2</th>
+                    </tr></thead><tbody>`;
+                    state.teams.forEach((t, i) => {
+                        const p1Id = (t.playerIds && t.playerIds[0]) ? t.playerIds[0] : null;
+                        const p2Id = (t.playerIds && t.playerIds[1]) ? t.playerIds[1] : null;
+                        const p1 = p1Id ? state.players.find(x => x.id === p1Id) : null;
+                        const p2 = p2Id ? state.players.find(x => x.id === p2Id) : null;
+
+                        html += `<tr>
+                            <td>${i + 1}</td>
+                            <td style="font-weight:bold">${t.name}</td>
+                            <td>${p1 ? `${p1.surname} ${p1.firstName}` : "-"}</td>
+                            <td style="font-size:0.9em;">${p1 ? (p1.uciId || "-") : "-"}</td>
+                            <td>${p2 ? `${p2.surname} ${p2.firstName}` : "-"}</td>
+                            <td style="font-size:0.9em;">${p2 ? (p2.uciId || "-") : "-"}</td>
+                        </tr>`;
+                    });
+                    html += `</tbody></table>`;
+                }
+
+                html += `<h2 style="margin-top:40px;">Rozpis zápasů</h2>`;
                 html += `<table><thead><tr>
                     <th style="width:40px">#</th>
                     <th style="width:120px">Skupina / Fáze</th>
@@ -4151,34 +4675,6 @@
                 });
 
                 html += `</tbody></table>`;
-
-                const standings = admin.calculateStandings();
-                if (standings.length > 0) {
-                    html += `<h2 style="margin-top:50px;">Konečné pořadí / Tabulka</h2>`;
-                    html += `<table><thead><tr>
-                        <th style="width:40px">#</th>
-                        <th>Tým</th>
-                        <th style="text-align:center; width:40px;">Z</th>
-                        <th style="text-align:center; width:40px;">V</th>
-                        <th style="text-align:center; width:40px;">R</th>
-                        <th style="text-align:center; width:40px;">P</th>
-                        <th style="text-align:center; width:60px;">Skóre</th>
-                        <th style="text-align:center; width:50px;">Body</th>
-                    </tr></thead><tbody>`;
-                    standings.forEach((s, idx) => {
-                        html += `<tr>
-                            <td>${idx + 1}.</td>
-                            <td style="font-weight:bold;">${s.name}</td>
-                            <td style="text-align:center;">${s.gp}</td>
-                            <td style="text-align:center;">${s.w}</td>
-                            <td style="text-align:center;">${s.d}</td>
-                            <td style="text-align:center;">${s.l}</td>
-                            <td style="text-align:center;">${s.gf}:${s.ga}</td>
-                            <td style="text-align:center; font-weight:bold;">${s.pts}</td>
-                        </tr>`;
-                    });
-                    html += `</tbody></table>`;
-                }
 
                 if (state.teams.length > 0) {
                     html += `<h2 style="margin-top:50px; page-break-before:always;">Křížová tabulka výsledků</h2>`;
@@ -4215,6 +4711,45 @@
                         html += `<td style="font-weight:bold;">${s.pts}</td><td>${s.gf}:${s.ga}</td></tr>`;
                     });
                     html += `</tbody></table>`;
+                }
+
+                const standings = admin.calculateStandings();
+                if (standings.length > 0) {
+                    html += `<h2 style="margin-top:50px;">Konečné pořadí / Tabulka</h2>`;
+                    html += `<table><thead><tr>
+                        <th style="width:40px">#</th>
+                        <th>Tým</th>
+                        <th style="text-align:center; width:40px;">Z</th>
+                        <th style="text-align:center; width:40px;">V</th>
+                        <th style="text-align:center; width:40px;">R</th>
+                        <th style="text-align:center; width:40px;">P</th>
+                        <th style="text-align:center; width:60px;">Skóre</th>
+                        <th style="text-align:center; width:50px;">Body</th>
+                    </tr></thead><tbody>`;
+                    standings.forEach((s, idx) => {
+                        html += `<tr>
+                            <td>${idx + 1}.</td>
+                            <td style="font-weight:bold;">${s.name}</td>
+                            <td style="text-align:center;">${s.gp}</td>
+                            <td style="text-align:center;">${s.w}</td>
+                            <td style="text-align:center;">${s.d}</td>
+                            <td style="text-align:center;">${s.l}</td>
+                            <td style="text-align:center;">${s.gf}:${s.ga}</td>
+                            <td style="text-align:center; font-weight:bold;">${s.pts}</td>
+                        </tr>`;
+                    });
+                    html += `</tbody></table>`;
+                }
+
+                if (state.misc && state.misc.length > 0) {
+                    html += `<h2 style="margin-top:50px;">Různé</h2>`;
+                    html += `<ul style="margin-top:10px; font-size:0.9em; color:#444;">`;
+                    state.misc.forEach(m => {
+                        if (m.text.trim()) {
+                            html += `<li style="margin-bottom:5px;">${m.text}</li>`;
+                        }
+                    });
+                    html += `</ul>`;
                 }
 
                 html += `
@@ -4747,12 +5282,20 @@
                             </div>
                         `;
                     } else {
+                        const homePlayers = admin.getTeamPlayers(m.home);
+                        const guestPlayers = admin.getTeamPlayers(m.guest);
                         li.innerHTML = `
                             <div style="flex:1; display:grid; grid-template-columns: 120px 1fr 15px 1fr 60px 1fr; align-items:center; font-size:0.85em; gap:5px; padding-right:10px; overflow:hidden;">
                                 <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><b>${idx + 1}.</b> ${m.title}</div>
-                                <div style="text-align:right; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${admin.getTeamName(m.home)}</div>
+                                <div style="text-align:right; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    ${admin.getTeamName(m.home)}
+                                    ${homePlayers ? `<div style="font-weight:normal; font-size:0.85em; color:#888;">${homePlayers}</div>` : ""}
+                                </div>
                                 <div style="text-align:center; color:#888;">:</div>
-                                <div style="text-align:left; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${admin.getTeamName(m.guest)}</div>
+                                <div style="text-align:left; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    ${admin.getTeamName(m.guest)}
+                                    ${guestPlayers ? `<div style="font-weight:normal; font-size:0.85em; color:#888;">${guestPlayers}</div>` : ""}
+                                </div>
                                 <div style="text-align:center; ${hasScore ? 'font-weight:900; color:var(--accent-green);' : 'font-weight:300; color:#fff;'}">${scoreDisplay}</div>
                                 <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#aaa; font-style:italic;">${admin.getRefName(m.referee)}</div>
                             </div>
