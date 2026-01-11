@@ -1511,7 +1511,7 @@
                 </div>
             </div>
 
-            <!-- 4. Export -->
+            <!-- 5. Export -->
             <div class="accordion">
                 <div class="accordion-header" onclick="toggleAccordion('acc-export')">
                     Exporty <span>▼</span>
@@ -4810,6 +4810,11 @@
                 const filename = (state.tournamentName || "Export") + "_Rozpis.xlsx";
                 XLSX.writeFile(wb, filename);
             },
+            openCrossTableWindow: () => {
+                const baseUrl = window.location.href.split('?')[0];
+                const url = baseUrl + '?crosstable&session=' + state.sessionId;
+                window.open(url, 'CrossTableWindow', 'width=500,height=400,resizable=yes,scrollbars=yes');
+            },
             toPrintable: () => {
                 const win = window.open('', '_blank');
                 let html = `<html><head><title>Tisk rozpisu - ${state.tournamentName}</title>
@@ -5069,8 +5074,30 @@
                 }
 
                 if (state.activeStandingsTab === 'cross') {
+                    // Inject Pop-out button if not exists
+                    let popBtn = document.getElementById('btn-cross-popout');
+                    if (!popBtn) {
+                        popBtn = document.createElement('button');
+                        popBtn.id = 'btn-cross-popout';
+                        popBtn.className = 'small-btn btn-blue';
+                        popBtn.innerHTML = '🗖';
+                        popBtn.title = 'Otevřít v samostatném okně';
+                        popBtn.style = "margin-left: 5px; padding: 2px 8px;";
+                        popBtn.onclick = exporter.openCrossTableWindow;
+                        // Append to the switcher
+                        const switcher = document.querySelector('.tab-switcher');
+                        if (switcher) switcher.appendChild(popBtn);
+                    } else {
+                        // Ensure it is visible
+                        popBtn.style.display = 'inline-block';
+                    }
+
                     ui.renderCrossTable(container);
                     return;
+                } else {
+                    // Hide pop-out button if not in cross tab
+                    const popBtn = document.getElementById('btn-cross-popout');
+                    if (popBtn) popBtn.style.display = 'none';
                 }
 
                 const standings = admin.calculateStandings();
@@ -5777,7 +5804,8 @@
         }
 
         function openProjectionWindow() {
-            const url = window.location.origin + window.location.pathname + '?projection&session=' + state.sessionId;
+            const baseUrl = window.location.href.split('?')[0];
+            const url = baseUrl + '?projection&session=' + state.sessionId;
             projectionWindow = window.open(url, "ScoreboardProjection_" + state.sessionId, "width=800,height=600");
             if (!projectionWindow) {
                 alert("Vyskakovací okno bylo zablokováno. Prosím povolte jej pro tuto stránku.");
@@ -5796,7 +5824,70 @@
         // (Already set up above for both audio elements)
 
         // --- INIT ---
-        window.addEventListener('load', game.init);
+        // --- INIT ---
+        // window.addEventListener('load', game.init); // Removed to prevent double initialization
+
+        const isProj = window.location.search.includes('projection');
+        const isCrossTable = window.location.search.includes('crosstable');
+
+        if (isProj) {
+            const ac = document.getElementById('admin-container');
+            if (ac) ac.style.display = 'none';
+            const qr = document.getElementById('qr-layout');
+            if (qr) qr.style.display = 'flex';
+        } else if (isCrossTable) {
+            const ac = document.getElementById('admin-container');
+            if (ac) ac.style.display = 'none';
+            const ctLayout = document.getElementById('cross-table-layout');
+            if (ctLayout) ctLayout.style.display = 'flex';
+            document.body.style.padding = '0';
+        }
+
+        // Initialize session ID
+        if (!isProj && !isCrossTable) {
+            if (!localStorage.getItem('scoreboardState')) {
+                state.sessionId = admin.generateSessionId();
+            }
+        }
+
+        window.onload = () => {
+            if (isProj) {
+                // Ensure hidden
+                const ac = document.getElementById('admin-container');
+                if (ac) ac.style.display = 'none';
+
+                window.addEventListener('storage', (e) => {
+                    const loaded = localStorage.getItem('scoreboardState');
+                    if (loaded) {
+                        const parsed = JSON.parse(loaded);
+                        if (parsed.sessionId === state.sessionId) {
+                            Object.assign(state, parsed);
+                            ui.updateProjection();
+                        }
+                    }
+                });
+                admin.loadFromStorage();
+            }
+            else if (isCrossTable) {
+                // Ensure hidden
+                const ac = document.getElementById('admin-container');
+                if (ac) ac.style.display = 'none';
+
+                window.addEventListener('storage', (e) => {
+                    admin.loadFromStorage();
+                    const container = document.getElementById('cross-table-popout-container');
+                    if (container) ui.renderCrossTable(container);
+                });
+                admin.loadFromStorage();
+                const container = document.getElementById('cross-table-popout-container');
+                if (container) ui.renderCrossTable(container);
+                ui.updateProjection = () => { };
+            }
+            else {
+                // Normal Mode: Use game.init() which handles full startup
+                game.init();
+            }
+        };
 
     </script>
 
@@ -5822,6 +5913,15 @@
                     ✅</button>
             </div>
         </div>
+    </div>
+
+    <!-- Cross Table Pop-out Window Layout -->
+    <div id="cross-table-layout"
+        style="display:none; flex-direction:column; width:100%; height:100vh; background:#1a1a1a; padding:10px; box-sizing:border-box;">
+        <div
+            style="font-size:1.2em; font-weight:bold; color:var(--accent-blue); margin-bottom:10px; text-align:center;">
+            Křížová Tabulka</div>
+        <div id="cross-table-popout-container" style="flex:1; overflow:auto;"></div>
     </div>
 
     <div id="qr-layout"
