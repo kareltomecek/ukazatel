@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Antigravity Scoreboard (SB)</title>
+    <title>OmniScore (OmS)</title>
     <!-- SheetJS for Excel/CSV import -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- QRCode library for PO2 -->
@@ -1689,7 +1689,7 @@
             <span id="admin-footer-session" style="font-weight:bold; color:var(--accent-blue);">---</span>
             <span id="admin-footer-progress" style="font-weight:bold; color:#888;">&nbsp;&nbsp;&nbsp;&nbsp;-</span>
         </div>
-        <div id="admin-footer-end">-</div>
+        <div id="admin-footer-end">OmniScore (OmS)</div>
         <div id="admin-footer-time">-</div>
     </div>
 
@@ -1752,7 +1752,7 @@
 
         if (!sessionId) {
             // Check sessionStorage for persistence across refreshes
-            sessionId = sessionStorage.getItem('sb_session_id');
+            sessionId = sessionStorage.getItem('oms_session_id');
             if (!sessionId) {
                 // Generate new 5-character alphanumeric session ID
                 sessionId = Math.random().toString(36).substring(2, 7).toUpperCase();
@@ -1761,10 +1761,10 @@
 
         // Persist session ID for ZO refreshes (only if not a PO window)
         if (!isPO) {
-            sessionStorage.setItem('sb_session_id', sessionId);
+            sessionStorage.setItem('oms_session_id', sessionId);
         }
 
-        const syncChannel = new BroadcastChannel('sb_sync_' + sessionId);
+        const syncChannel = new BroadcastChannel('oms_sync_' + sessionId);
         // --- DATA STRUCTURES ---
         const PHASES = [
             { id: 0, name: "Nastupuje", timeKey: 'setup' },
@@ -4754,7 +4754,7 @@
 
                 html += `
                 <div style="margin-top:40px; text-align:right; font-size:0.8em; color:#999;">
-                    Generováno aplikací Antigravity Scoreboard
+                    Generováno aplikací OmniScore
                 </div>
                 </body></html>`;
                 win.document.write(html);
@@ -5344,7 +5344,7 @@
                         if (pLayout) pLayout.style.display = 'none';
                         if (qrLayout) {
                             qrLayout.style.display = 'flex';
-                            document.getElementById('qr-tournament-name').innerText = state.tournamentName || "SB Scoreboard";
+                            document.getElementById('qr-tournament-name').innerText = state.tournamentName || "OmniScore";
                             document.getElementById('qr-session-id').innerText = state.sessionId;
 
                             // Generate QR Code if empty
@@ -5586,7 +5586,7 @@
         style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#1a1a1a; color:white; padding:20px; text-align:center;">
         <div id="qr-header-stripe" style="height: 4px; width: 100%; position: fixed; top: 0; left: 0; z-index: 1000;">
         </div>
-        <h1 id="qr-tournament-name" style="font-size:3.5vw; margin-bottom:2vh; color:var(--accent-blue);">SB Scoreboard
+        <h1 id="qr-tournament-name" style="font-size:3.5vw; margin-bottom:2vh; color:var(--accent-blue);">OmniScore</h1>
         </h1>
         <div id="qr-container"
             style="background:white; padding:1.5vw; border-radius:0.5vw; box-shadow:0 1vw 3vw rgba(0,0,0,0.5);"></div>
