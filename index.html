@@ -1529,16 +1529,18 @@
                 </div>
             </div>
 
-            <!-- 6. Music Player -->
+            <!-- 6. Audio -->
             <div class="accordion">
                 <div class="accordion-header" onclick="toggleAccordion('acc-music')">
-                    Hudba na pozadí <span>▼</span>
+                    Audio <span>▼</span>
                 </div>
                 <div id="acc-music" class="accordion-content">
+                    <!-- Subsection: Background Music -->
+                    <h4 style="margin: 0 0 10px 0; border: none; padding: 0; color: #4caf50;">Hudba na pozadí</h4>
                     <div class="form-group">
                         <button class="btn-full" onclick="music.pickDirectory()"
                             title="Vyberte lokální složku s MP3 soubory pro přehrávání na pozadí."
-                            style="background:#444;">
+                            style="background:#444; margin-top:0;">
                             📁 Vybrat složku s hudbou
                         </button>
                     </div>
@@ -1583,11 +1585,39 @@
                         </div>
                     </div>
 
-                    <ul class="match-list" id="music-list" style="max-height:300px; overflow-y:auto;">
+                    <ul class="match-list" id="music-list"
+                        style="max-height:150px; overflow-y:auto; margin-bottom: 20px;">
                         <li style="color:#666; font-size:0.8em; text-align:center; padding:10px;">Složka nebyla
                             vybrána
                         </li>
                     </ul>
+
+                    <!-- Subsection: Jingle Pool -->
+                    <h4 style="margin: 20px 0 10px 0; border: none; padding: 0; color: #2196f3;">Jingly pro oslavy</h4>
+                    <div class="form-group">
+                        <label>Režim oslav (tlačítko Gól)</label>
+                        <select id="input-jingle-mode" onchange="jingles.setMode(this.value)">
+                            <option value="priority">Týmový jingle (priorita) + náhodný</option>
+                            <option value="random">Vždy náhodný z poolu</option>
+                        </select>
+                    </div>
+                    <div class="form-group"
+                        style="background: rgba(33, 150, 243, 0.1); padding: 10px; border-radius: 8px; border: 1px solid var(--accent-blue);">
+                        <label style="color: var(--accent-blue); font-weight: bold;">Zásobník jinglů (Pool)</label>
+                        <input type="file" id="input-jingle-upload" multiple accept="audio/*"
+                            onchange="jingles.handleUpload(this)">
+                        <div
+                            style="display:flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+                            <small id="jingle-pool-count" style="color: #aaa; font-size: 0.75em;">Počet jinglů:
+                                0</small>
+                            <button class="small-btn btn-red" onclick="jingles.clear()"
+                                style="padding: 2px 8px; font-size: 0.7em;">Vymazat vše</button>
+                        </div>
+                    </div>
+                    <div id="jingle-pool-list"
+                        style="margin-top:10px; font-size:0.75em; color:#888; max-height:100px; overflow-y:auto;">
+                        <!-- List of file names -->
+                    </div>
                 </div>
             </div>
 
@@ -1644,6 +1674,17 @@
                         <label>Prodleva před další položkou (s)</label>
                         <input type="number" id="input-po-delay" value="10" min="1" max="30"
                             oninput="admin.saveSettings(false)">
+                    </div>
+
+                    <h4 style="margin: 20px 0 10px 0; border:none;">Výchozí nastavení log</h4>
+                    <div class="form-group"
+                        style="background: rgba(76, 175, 80, 0.1); padding: 10px; border-radius: 8px; border: 1px solid var(--accent-green); margin-bottom: 20px;">
+                        <label style="color: var(--accent-green); font-weight: bold;">Výchozí logo (pro týmy bez
+                            loga)</label>
+                        <input type="file" id="input-default-logo" accept="image/*"
+                            onchange="admin.handleDefaultLogo(this)">
+                        <small style="display: block; margin-top: 5px; color: #aaa; font-size: 0.75em;">Tento soubor
+                            bude přiřazen všem týmům, které aktuálně nemají vybrané logo.</small>
                     </div>
 
 
@@ -1862,6 +1903,8 @@
             poTransitionData: null,
             poTransitionDelay: 10,
             volMusic: 0.5,
+            jinglePool: [], // List of filenames/IDs
+            jingleMode: 'priority', // 'priority' or 'random'
             musicPlaylist: [], // { name: string, handle: FileSystemFileHandle }
             musicAutoEnabled: false,
             musicMode: 'continuous', // 'continuous' or 'random'
@@ -2093,22 +2136,40 @@
 
                 if (playSound && delta > 0) {
                     const teamName = isHome ? state.currentMatch.homeName : state.currentMatch.guestName;
-                    game.playTeamAnthem(teamName);
+                    const teamId = isHome ? state.currentMatch.home : state.currentMatch.guest;
+                    game.playGoalCelebration(teamId, teamName);
                 }
 
                 ui.updateScores();
                 game.syncProjection();
             },
 
-            playTeamAnthem: (teamName) => {
-                const audioData = state.teamAnthems[teamName];
+            playGoalCelebration: async (teamId, teamName) => {
+                let audioData = null;
+                let isAnthem = false;
+
+                // 1. Check Mode
+                if (state.jingleMode === 'priority') {
+                    audioData = state.teamAnthems[teamId] || state.teamAnthems[teamName]; // Try ID then Name for legacy
+                    if (audioData) isAnthem = true;
+                }
+
+                // 2. Fallback to Pool if no anthem or Mode is 'random'
+                if (!audioData) {
+                    const poolFile = await jingles.getRandomJingle();
+                    if (poolFile) {
+                        audioData = URL.createObjectURL(poolFile);
+                    }
+                }
+
+                // 3. Play if something found
                 if (audioData) {
                     if (currentAnthemAudio) {
                         currentAnthemAudio.pause();
                         currentAnthemAudio = null;
                     }
 
-                    // Přerušit hudbu na pozadí, pokud hraje
+                    // Preřušit hudbu na pozadí
                     if (!currentMusicAudio.paused) {
                         currentMusicAudio.pause();
                         clearInterval(music.fadeInterval);
@@ -2117,7 +2178,12 @@
 
                     currentAnthemAudio = new Audio(audioData);
                     currentAnthemAudio.volume = state.volAnthem || 1.0;
-                    currentAnthemAudio.play().catch(e => console.warn("Anthem play failed:", e));
+                    currentAnthemAudio.play().catch(e => console.warn("Celebration play failed:", e));
+
+                    // Revoke URL if it was a Blob URL from pool
+                    if (!isAnthem) {
+                        currentAnthemAudio.onended = () => URL.revokeObjectURL(audioData);
+                    }
                 }
             },
 
@@ -3129,7 +3195,7 @@
                         <div class="conflict-header">${headerTxt}</div>
                         <div class="conflict-grid">
                             <div class="conflict-cell">
-                                <span class="conflict-label">Stávající v SB</span>
+                                <span class="conflict-label">Stávající v OmS</span>
                                 <div class="conflict-value">${conf.existing.surname} ${conf.existing.firstName}</div>
                                 <div class="conflict-value" style="font-size:0.8em; color:#888;">UCI: ${conf.existing.uciId || "-"}</div>
                             </div>
@@ -3145,11 +3211,11 @@
                         </div>
                         <div class="conflict-choice" id="choice-group-${idx}">
                             <button class="choice-btn active" onclick="admin.setConflictChoice(${idx}, 'keep')"
-                                title="Data v aplikaci SB zůstanou beze změny. Ignorovat data z cloudu/souboru.">Ponechat původní</button>
+                                title="Data v aplikaci OmS zůstanou beze změny. Ignorovat data z cloudu/souboru.">Ponechat původní</button>
                             <button class="choice-btn" onclick="admin.setConflictChoice(${idx}, 'update')"
-                                title="Aktualizovat stávajícího hráče v SB daty z cloudu/souboru.">Přepsat z cloudu</button>
+                                title="Aktualizovat stávajícího hráče v OmS daty z cloudu/souboru.">Přepsat z cloudu</button>
                             <button class="choice-btn" onclick="admin.setConflictChoice(${idx}, 'both')"
-                                title="V SB zůstane stávající záznam a zároveň se vytvoří nový z importu (budou tam oba).">Ponechat oba</button>
+                                title="V OmS zůstane stávající záznam a zároveň se vytvoří nový z importu (budou tam oba).">Ponechat oba</button>
                         </div>
                     `;
                     container.appendChild(row);
@@ -3205,8 +3271,11 @@
             },
 
             resetApp: () => {
-                if (confirm("Opravdu chcete vymazat všechna data aplikace (týmy, rozpis, zvuk)? Tuto akci nelze vzít zpět.")) {
+                if (confirm("Opravdu chcete vymazat všechna data aplikace (týmy, rozpis, zvuk, jingly)? Tuto akci nelze vzít zpět.")) {
                     localStorage.removeItem('scoreboardState');
+                    // Clear IndexedDB databases
+                    indexedDB.deleteDatabase("MusicDB");
+                    indexedDB.deleteDatabase("JingleDB");
                     location.reload();
                 }
             },
@@ -3664,6 +3733,39 @@
                 }
             },
 
+            handleDefaultLogo: (input) => {
+                if (input.files && input.files[0]) {
+                    const file = input.files[0];
+                    if (file.size > 500 * 1024) {
+                        alert("Logo je příliš velké (max 500KB).");
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const base64 = e.target.result;
+                        let count = 0;
+                        state.teams.forEach(team => {
+                            if (!state.teamLogos[team.id]) {
+                                state.teamLogos[team.id] = base64;
+                                count++;
+                            }
+                        });
+                        if (count > 0) {
+                            admin.renderLogoSettings();
+                            ui.updateLogos();
+                            game.syncProjection();
+                            admin.saveToStorage();
+                            alert(`Logo přiřazeno ${count} týmům.`);
+                        } else {
+                            alert("Všechny týmy již mají svá loga.");
+                        }
+                        input.value = ""; // Reset input
+                    };
+                    reader.readAsDataURL(file);
+                }
+            },
+
             loadMatch: (index, resetPhase = false, snapshot = null) => {
                 // Save current result if it was a real match before loading new one
                 if (state.activeMatchIndex !== -1 && !state.currentMatch.isEvent) {
@@ -4043,9 +4145,20 @@
                     if (typeof parsed.activeMatchIndex !== 'undefined') state.activeMatchIndex = parsed.activeMatchIndex;
                     if (parsed.currentMatch) state.currentMatch = parsed.currentMatch;
                     if (parsed.timer) state.timer = parsed.timer;
+                    if (parsed.jingleMode) state.jingleMode = parsed.jingleMode;
                     if (parsed.misc && parsed.misc.length > 0) {
                         state.misc = parsed.misc;
                     }
+
+                    // Metadata
+                    if (parsed.tournamentDate) state.tournamentDate = parsed.tournamentDate;
+                    if (parsed.tournamentLocation) state.tournamentLocation = parsed.tournamentLocation;
+                    if (parsed.tournamentOrganizer) state.tournamentOrganizer = parsed.tournamentOrganizer;
+                    if (parsed.pitchSize) state.pitchSize = parsed.pitchSize;
+                    if (parsed.officialChiefReferee) state.officialChiefReferee = parsed.officialChiefReferee;
+                    if (parsed.officialTimekeeper) state.officialTimekeeper = parsed.officialTimekeeper;
+                    if (parsed.officialRecorder) state.officialRecorder = parsed.officialRecorder;
+                    if (parsed.cloudFileId) state.cloudFileId = parsed.cloudFileId;
 
                     // Fallback to default if empty or only empty rows exist
                     const hasData = state.misc && state.misc.some(m => m.text && m.text.trim().length > 0);
@@ -4183,6 +4296,12 @@
                     document.getElementById('rule-loss').value = state.rules.lossPoints;
                     document.getElementById('rule-mini-tables').checked = !!state.rules.useMiniTables;
                 }
+
+                if (state.jingleMode) {
+                    const el = document.getElementById('input-jingle-mode');
+                    if (el) el.value = state.jingleMode;
+                }
+                jingles.list();
 
                 state.isLoading = false;
 
@@ -4528,6 +4647,88 @@
             }
         };
 
+        const jingles = {
+            async openDB() {
+                return new Promise((resolve, reject) => {
+                    const req = indexedDB.open("JingleDB", 1);
+                    req.onupgradeneeded = () => {
+                        const db = req.result;
+                        if (!db.objectStoreNames.contains("files")) {
+                            db.createObjectStore("files", { keyPath: "name" });
+                        }
+                    };
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => reject(req.error);
+                });
+            },
+            async setMode(val) {
+                state.jingleMode = val;
+                admin.saveToStorage();
+            },
+            async handleUpload(input) {
+                if (!input.files || input.files.length === 0) return;
+                const db = await jingles.openDB();
+                const tx = db.transaction("files", "readwrite");
+                const store = tx.objectStore("files");
+
+                let loaded = 0;
+                for (const file of input.files) {
+                    store.put({ name: file.name, data: file });
+                    loaded++;
+                }
+
+                tx.oncomplete = () => {
+                    jingles.list();
+                    alert(`Nahráno ${loaded} jinglů.`);
+                    input.value = "";
+                };
+            },
+            async list() {
+                try {
+                    const db = await jingles.openDB();
+                    const tx = db.transaction("files", "readonly");
+                    const store = tx.objectStore("files");
+                    const req = store.getAllKeys();
+
+                    req.onsuccess = () => {
+                        const keys = req.result;
+                        state.jinglePool = keys;
+                        const countEl = document.getElementById('jingle-pool-count');
+                        if (countEl) countEl.innerText = `Počet jinglů: ${keys.length}`;
+
+                        const listEl = document.getElementById('jingle-pool-list');
+                        if (listEl) {
+                            listEl.innerHTML = keys.map(k => `<div style="padding:2px 0;">• ${k}</div>`).join('');
+                        }
+                    };
+                } catch (e) {
+                    console.error("Jingle list error:", e);
+                }
+            },
+            async clear() {
+                if (!confirm("Opravdu chcete vymazat celý zásobník jinglů?")) return;
+                const db = await jingles.openDB();
+                const tx = db.transaction("files", "readwrite");
+                tx.objectStore("files").clear();
+                tx.oncomplete = () => {
+                    jingles.list();
+                };
+            },
+            async getRandomJingle() {
+                if (state.jinglePool.length === 0) return null;
+                const db = await jingles.openDB();
+                const tx = db.transaction("files", "readonly");
+                const store = tx.objectStore("files");
+                const randomName = state.jinglePool[Math.floor(Math.random() * state.jinglePool.length)];
+
+                return new Promise(resolve => {
+                    const req = store.get(randomName);
+                    req.onsuccess = () => resolve(req.result ? req.result.data : null);
+                    req.onerror = () => resolve(null);
+                });
+            }
+        };
+
 
         const exporter = {
             resolveName: (id, type) => {
@@ -4554,15 +4755,11 @@
                 ];
 
                 const scheduleData = state.schedule.map((m, i) => {
-                    const homePlayers = m.type === 'match' ? admin.getTeamPlayers(m.home) : "";
-                    const guestPlayers = m.type === 'match' ? admin.getTeamPlayers(m.guest) : "";
                     return {
                         "Pořadí": i + 1,
                         "Název / Skupina": m.title || "Match",
                         "Domácí": m.type === 'match' ? exporter.resolveName(m.home, 'team') : "-",
-                        "Hráči Domácí": homePlayers,
                         "Hosté": m.type === 'match' ? exporter.resolveName(m.guest, 'team') : "-",
-                        "Hráči Hosté": guestPlayers,
                         "Skóre": m.type === 'match' ? (m.homeScore !== null ? `${m.homeScore}:${m.guestScore}` : "-") : "-",
                         "Rozhodčí": m.type === 'match' ? exporter.resolveName(m.referee, 'ref') : "-",
                         "Délka (s)": m.duration || (m.type === 'match' ? (state.times.play * 2 + state.times.break) : 600)
@@ -5282,19 +5479,15 @@
                             </div>
                         `;
                     } else {
-                        const homePlayers = admin.getTeamPlayers(m.home);
-                        const guestPlayers = admin.getTeamPlayers(m.guest);
                         li.innerHTML = `
                             <div style="flex:1; display:grid; grid-template-columns: 120px 1fr 15px 1fr 60px 1fr; align-items:center; font-size:0.85em; gap:5px; padding-right:10px; overflow:hidden;">
                                 <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"><b>${idx + 1}.</b> ${m.title}</div>
                                 <div style="text-align:right; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                     ${admin.getTeamName(m.home)}
-                                    ${homePlayers ? `<div style="font-weight:normal; font-size:0.85em; color:#888;">${homePlayers}</div>` : ""}
                                 </div>
                                 <div style="text-align:center; color:#888;">:</div>
                                 <div style="text-align:left; font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                     ${admin.getTeamName(m.guest)}
-                                    ${guestPlayers ? `<div style="font-weight:normal; font-size:0.85em; color:#888;">${guestPlayers}</div>` : ""}
                                 </div>
                                 <div style="text-align:center; ${hasScore ? 'font-weight:900; color:var(--accent-green);' : 'font-weight:300; color:#fff;'}">${scoreDisplay}</div>
                                 <div style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:#aaa; font-style:italic;">${admin.getRefName(m.referee)}</div>
