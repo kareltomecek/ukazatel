@@ -12,7 +12,6 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
-    <script src="./firebase_config.js"></script>
     <style>
         :root {
             --bg-color: #1a1a1a;
@@ -1953,6 +1952,17 @@
         // ===================================================================================
         let projectionWindow = null;
         let qrWindow = null;
+
+        // --- FIREBASE CONFIG ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyAdIAz37gR_YmaJX21OmIAu0LmutvKIw6s",
+            authDomain: "omniscore-live.firebaseapp.com",
+            databaseURL: "https://omniscore-live-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "omniscore-live",
+            storageBucket: "omniscore-live.firebasestorage.app",
+            messagingSenderId: "1089053095317",
+            appId: "1:1089053095317:web:d90f097e7df2a53e34f29c"
+        };
 
         // --- SESSION HANDLING ---
         const urlParams = new URLSearchParams(window.location.search);
