@@ -9,6 +9,10 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- QRCode library for PO2 -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="./firebase_config.js"></script>
     <style>
         :root {
             --bg-color: #1a1a1a;
@@ -1978,6 +1982,16 @@
         // HERNÍ JÁDRO (GAME)
         // ===================================================================================
         // --- CORE LOGIC CLASS ---
+        // Initialize Firebase
+        if (typeof firebase !== 'undefined' && typeof firebaseConfig !== 'undefined') {
+            try {
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                    console.log("Firebase initialized");
+                }
+            } catch (e) { console.error("Firebase init failed:", e); }
+        }
+
         const game = {
             init: () => {
                 if (state.isProjectionMode) {
@@ -2005,6 +2019,20 @@
 
                     // 2. Window Message Listener (for window.open direct communication)
                     window.addEventListener('message', (event) => handleSync(event.data));
+
+                    // 3. Firebase Listener (for Cross-Device Sync)
+                    if (typeof firebase !== 'undefined') {
+                        try {
+                            const dbRef = firebase.database().ref('sessions/' + state.sessionId);
+                            dbRef.on('value', (snapshot) => {
+                                const data = snapshot.val();
+                                if (data) {
+                                    console.log("Firebase: Data received");
+                                    handleSync(data);
+                                }
+                            });
+                        } catch (e) { console.error("Firebase sync error:", e); }
+                    }
 
                     // Request immediate sync from admin
                     syncChannel.postMessage('REQUEST_SYNC');
@@ -2047,6 +2075,9 @@
                             game.syncProjection();
                         }
                     };
+
+                    // Start periodic Firebase sync (backup sync every 5 seconds or just rely on syncProjection)
+                    // We will rely on game.syncProjection() which is called on every state change.
 
                     setInterval(() => game.tick(), 100);
                     setInterval(() => ui.updateAdminFooter(), 1000);
@@ -2414,13 +2445,25 @@
 
             syncProjection: () => {
                 const payload = { ...state, telemetry: game.getTelemetry() };
+                const plainPayload = JSON.parse(JSON.stringify(payload));
+
                 // Send to BroadcastChannel for all listeners (OBS, other tabs)
-                syncChannel.postMessage(JSON.parse(JSON.stringify(payload)));
+                syncChannel.postMessage(plainPayload);
 
                 // Legacy window.postMessage for the specific window opened via button
                 if (projectionWindow && !projectionWindow.closed) {
-                    projectionWindow.postMessage(JSON.parse(JSON.stringify(payload)), '*');
+                    projectionWindow.postMessage(plainPayload, '*');
                 }
+
+                // Send to Firebase (Cross-Device)
+                if (typeof firebase !== 'undefined' && !state.isProjectionMode) {
+                    try {
+                        firebase.database().ref('sessions/' + state.sessionId).set(plainPayload);
+                    } catch (e) {
+                        console.error("Firebase write failed:", e);
+                    }
+                }
+
                 ui.updateAdminFooter();
             },
 
