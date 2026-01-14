@@ -1312,9 +1312,7 @@
                                     title="Stáhne nejnovější globální databázi hráčů z Google Disku a synchronizuje ji s vaší hlavní lokální verzí."
                                     style="background:#00a2ff; flex:1; font-weight:bold;">🔄 Aktualizovat databázi
                                     hráčů</button>
-                                <button class="small-btn" onclick="admin.exportPlayersWithPassword()"
-                                    title="Vytvoří zálohu vaší aktuální databáze hráčů do souboru. Vyžaduje heslo."
-                                    style="background:#555; flex:1;">📥 Export databáze</button>
+
                             </div>
                         </div>
                     </div>
@@ -1682,6 +1680,11 @@
                         <small style="color:#888; font-size:0.75em; display:block; margin-top:4px;">
                             ID získáte z odkazu pro sdílení (např. 19QC...e1f3). Nastaveno správcem.
                         </small>
+                    </div>
+                    <div class="form-group" style="margin-top: 10px;">
+                        <button class="btn-full" onclick="admin.exportPlayersWithPassword()"
+                            title="Vytvoří zálohu vaší aktuální databáze hráčů do souboru. Vyžaduje heslo."
+                            style="background:#555;">📥 Export hlavní databáze hráčů</button>
                     </div>
 
                     <h4 style="margin: 20px 0 10px 0; border:none;">Projekční Okno</h4>
