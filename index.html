@@ -1290,7 +1290,7 @@
                 </div>
                 <div id="acc-players" class="accordion-content">
                     <div class="form-group">
-                        <label>Seznam Hráčů</label>
+                        <label>Seznam hráčů turnaje</label>
                         <div id="players-input-list"
                             style="display:flex; flex-direction:column; gap:5px; margin-bottom:10px;">
                             <!-- Dynamically populated -->
@@ -1310,8 +1310,8 @@
                             <div style="display:flex; gap:5px;">
                                 <button class="small-btn" onclick="admin.updatePlayersFromCloud()"
                                     title="Stáhne nejnovější globální databázi hráčů z Google Disku a synchronizuje ji s vaší hlavní lokální verzí."
-                                    style="background:#00a2ff; flex:1; font-weight:bold;">🔄 Aktualizovat databázi hráčů
-                                    z cloudu</button>
+                                    style="background:#00a2ff; flex:1; font-weight:bold;">🔄 Aktualizovat databázi
+                                    hráčů</button>
                                 <button class="small-btn" onclick="admin.exportPlayersWithPassword()"
                                     title="Vytvoří zálohu vaší aktuální databáze hráčů do souboru. Vyžaduje heslo."
                                     style="background:#555; flex:1;">📥 Export databáze</button>
@@ -1929,7 +1929,7 @@
             schedule: [],
             activeMatchIndex: -1, // Track which match from schedule is active
             theme: "dark", // Default to dark for better initial projection appearance
-            cloudFileId: "1_cQYwU0C_dLKioLuEV7lyxUh06Q9qjXi", // Google Drive File ID for players database
+            cloudFileId: "1wIMbybqiDgI4VnT7zc_q8F6O4ZdMdyGI", // Google Drive File ID for players database
             poTransitionActive: false,
             poTransitionData: null,
             poTransitionDelay: 10,
