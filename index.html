@@ -1671,12 +1671,16 @@
                 <div id="acc-app-settings" class="accordion-content">
                     <h4 style="margin-bottom:10px; border:none;">Cloudová Synchronizace</h4>
                     <div class="form-group">
-                        <label>Google Drive File ID (Hráči)</label>
+                        <label style="display:flex; justify-content:space-between; align-items:center;">
+                            Google Drive File ID (Hráči)
+                            <button class="small-btn" onclick="admin.unlockCloudID()" id="btn-unlock-cloud-id"
+                                title="Odemknout pro úpravy (vyžaduje heslo)"
+                                style="font-size: 0.7em; padding: 2px 8px; background: #444;">🔒 Upravit</button>
+                        </label>
                         <input type="text" id="input-cloud-file-id" placeholder="ID souboru z Google Disku"
-                            oninput="admin.saveSettings(false)">
+                            oninput="admin.saveSettings(false)" disabled style="opacity: 0.7; cursor: not-allowed;">
                         <small style="color:#888; font-size:0.75em; display:block; margin-top:4px;">
-                            ID získáte z odkazu pro sdílení (např. 19QC...e1f3). Soubor musí být nastaven na „Kdokoli má
-                            odkaz“.
+                            ID získáte z odkazu pro sdílení (např. 19QC...e1f3). Nastaveno správcem.
                         </small>
                     </div>
 
@@ -3591,6 +3595,18 @@
                 }
             },
 
+            unlockCloudID: async () => {
+                if (await admin.verifyAdminPassword()) {
+                    const input = document.getElementById('input-cloud-file-id');
+                    const btn = document.getElementById('btn-unlock-cloud-id');
+                    input.disabled = false;
+                    input.style.opacity = '1';
+                    input.style.cursor = 'text';
+                    input.focus();
+                    btn.style.display = 'none';
+                }
+            },
+
             updatePlayersFromCloud: async () => {
                 let fileId = state.cloudFileId;
                 if (!fileId) {
@@ -3657,12 +3673,37 @@
                             }
 
                             try {
-                                imported = JSON.parse(text);
-                            } catch (e) {
-                                throw new Error("Stažená data nejsou platný JSON.");
-                            }
+                                const rawData = JSON.parse(text);
+                                if (!Array.isArray(rawData)) throw new Error("Stažený JSON není pole hráčů.");
 
-                            if (!Array.isArray(imported)) throw new Error("Stažený JSON není pole hráčů.");
+                                // VALIDATION & SANITIZATION
+                                imported = rawData.map(item => {
+                                    // 1. Structure check - must be object
+                                    if (typeof item !== 'object' || item === null) return null;
+
+                                    // 2. Extract and Sanitize known fields only
+                                    // Helper to strip dangerous chars/tags
+                                    const sanitize = (str) => {
+                                        if (typeof str !== 'string') return "";
+                                        return str.replace(/[<>]/g, "").trim().substring(0, 100);
+                                    };
+
+                                    return {
+                                        id: sanitize(item.id) || ("player_" + Math.random().toString(36).substr(2, 9)),
+                                        firstName: sanitize(item.firstName),
+                                        surname: sanitize(item.surname),
+                                        uciId: sanitize(item.uciId)
+                                    };
+                                }).filter(item => {
+                                    // 3. Filter valid items: must have at least surname
+                                    return item && item.surname.length > 0;
+                                });
+
+                                if (imported.length === 0) throw new Error("JSON neobsahuje žádné platné záznamy o hráčích.");
+
+                            } catch (e) {
+                                throw new Error("Chyba při zpracování JSON: " + e.message);
+                            }
 
                             console.log("✓ Cloud Sync: Úspěch metodou", i + 1);
                             break;
