@@ -1115,6 +1115,59 @@
                     Nastavení Turnaje <span>▼</span>
                 </div>
                 <div id="acc-settings" class="accordion-content">
+                    <!-- BEGIN: QUICK START / IMPORT SECTION -->
+                    <div id="quick-setup-box"
+                        style="background: rgba(33, 150, 243, 0.1); border: 2px solid var(--accent-blue); padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <h4
+                            style="margin: 0 0 10px 0; border: none; padding: 0; color: var(--accent-blue); display: flex; align-items: center; gap: 8px;">
+                            🚀 Rychlý start / Import turnaje
+                        </h4>
+                        <div id="sched-section-import">
+                            <label
+                                style="display:block; font-size:0.85em; color:#bbb; font-weight:bold; margin-bottom:12px;">
+                                Nahrát rozpis z Excelu (.xlsx, .xls, .csv)
+                            </label>
+
+                            <input type="file" id="input-sched-import" accept=".xlsx, .xls, .csv" style="display:none"
+                                onchange="admin.handleScheduleImport(this)">
+                            <button class="btn-full" onclick="document.getElementById('input-sched-import').click()"
+                                style="background: var(--accent-blue); margin-top:0;">📂 Vybrat soubor a nastavit
+                                turnaj</button>
+
+                            <div
+                                style="margin-top:15px; font-size:0.8em; color:#ddd; background:rgba(0,0,0,0.2); padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
+                                <b style="color:var(--accent-blue); display:block; margin-bottom:8px; font-size:0.9em;">💡
+                                    Nápověda k importu:</b>
+
+                                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; line-height:1.4;">
+                                    <div>
+                                        <b style="color:#bbb; font-size:0.85em;">Klíčové sloupce:</b>
+                                        <ul style="margin:4px 0; padding-left:15px; color:#aaa;">
+                                            <li><span style="color:#fff;">Domácí, Hosté</span> (týmy)</li>
+                                            <li><span style="color:#fff;">Název</span> (skupina/fáze)</li>
+                                            <li><span style="color:#fff;">Rozhodčí</span></li>
+                                            <li><span style="color:#fff;">Délka</span> (v minutách)</li>
+                                        </ul>
+                                    </div>
+                                    <div>
+                                        <b style="color:#bbb; font-size:0.85em;">Výhody:</b>
+                                        <ul style="margin:4px 0; padding-left:15px; color:#aaa;">
+                                            <li><b>Smart Detekce:</b> Nezáleží na pořadí sloupců.</li>
+                                            <li><b>Sync:</b> Zachová loga a jingly týmů.</li>
+                                            <li><b>Cleanup:</b> Odstraní nepoužitá data.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div
+                                    style="margin-top:8px; font-size:0.85em; color:rgba(255,255,255,0.5); font-style:italic; border-top:1px solid rgba(255,255,255,0.05); padding-top:5px;">
+                                    Aplikace umí načíst i vlastní exporty (Round-trip). Podporuje .xlsx, .xls a .csv.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- END: QUICK START / IMPORT SECTION -->
+
                     <div class="form-group">
                         <label>Název Turnaje</label>
                         <input type="text" id="input-tournament-name" placeholder="Např. Zimní Pohár"
@@ -1360,23 +1413,14 @@
                 </div>
                 <div id="acc-schedule" class="accordion-content">
 
-                    <div class="mode-toggle" style="margin-top: 5px; background: #222;">
-                        <button id="tab-sched-gen" class="mode-toggle-btn sched-tab-btn active"
-                            onclick="admin.setScheduleMode('gen')"
-                            title="Vytvořit rozpis automaticky podle šablony.">🛠️ Generátor</button>
-                        <button id="tab-sched-import" class="mode-toggle-btn sched-tab-btn"
-                            onclick="admin.setScheduleMode('import')"
-                            title="Importovat rozpis z Excelu nebo CSV souboru.">📊 Import</button>
-                    </div>
-
-
-                    <!-- Generator Section -->
-                    <div id="sched-section-gen" class="sched-section active">
-                        <h4>📋 Generátor rozpisů</h4>
+                    <!-- Schedule Generator Section -->
+                    <div id="sched-section-gen"
+                        style="margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 15px;">
+                        <h4 style="margin-top: 5px;">📋 Generátor rozpisů</h4>
                         <div id="sched-template-container">
                             <label
-                                style="display:block; font-size:0.85em; color:var(--accent-blue); font-weight:bold; margin-bottom:12px;">Automatický
-                                rozpis (podle vzorů)</label>
+                                style="display:block; font-size:0.85em; color:var(--accent-blue); font-weight:bold; margin-bottom:12px;">Vytvořit
+                                rozpis (podle počtu družstev)</label>
                             <div style="display:flex; gap:8px;">
                                 <select id="sched-template-select" style="flex:1">
                                     <optgroup label="Vzory základní">
@@ -1392,34 +1436,8 @@
                                     </optgroup>
                                 </select>
                                 <button class="small-btn btn-blue" onclick="admin.generateScheduleFromTemplate()"
-                                    title="Smaže aktuální rozpis a vytvoří nový podle vybraného vzoru a počtu družstev."
+                                    title="Smaže aktuální rozpis a vytvoří nový podle vybraného vzoru a aktuálních družstev."
                                     style="background:var(--accent-blue);">Generovat</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Import Section -->
-                    <div id="sched-section-import" class="sched-section">
-                        <h4>📊 Import z Excelu</h4>
-                        <div>
-                            <label
-                                style="display:block; font-size:0.85em; color:#aaa; font-weight:bold; margin-bottom:12px;">Importovat
-                                ze souboru (.xlsx, .xls, .csv)</label>
-
-                            <input type="file" id="input-sched-import" accept=".xlsx, .xls, .csv" style="display:none"
-                                onchange="admin.handleScheduleImport(this)">
-                            <button class="btn-full" onclick="document.getElementById('input-sched-import').click()"
-                                style="background:#555; margin-top:0;">Vybrat soubor...</button>
-
-                            <div
-                                style="margin-top:10px; font-size:0.75em; color:#888; border-top:1px solid #444; padding-top:8px;">
-                                <b style="color:#bbb; display:block; margin-bottom:4px;">Očekávané sloupce (v
-                                    pořadí):</b>
-                                1. Název / Skupina (A)<br>
-                                2. Domácí družstvo (B)<br>
-                                3. Hostující družstvo (C)<br>
-                                4. Rozhodčí (D)<br>
-                                5. Délka v min. (E - volitelně)
                             </div>
                         </div>
                     </div>
@@ -1438,6 +1456,7 @@
                             <label>Název / Skupina</label>
                             <div style="display:flex; gap:5px;">
                                 <select id="sched-title" style="flex:1">
+                                    <option value="Základní skupina">Základní skupina</option>
                                     <option value="Skupina A">Skupina A</option>
                                     <option value="Skupina B">Skupina B</option>
                                     <option value="Skupina C">Skupina C</option>
@@ -1675,7 +1694,7 @@
                                 title="Odemknout pro úpravy (vyžaduje heslo)"
                                 style="font-size: 0.7em; padding: 2px 8px; background: #444;">🔒 Upravit</button>
                         </label>
-                        <input type="text" id="input-cloud-file-id" placeholder="ID souboru z Google Disku"
+                        <input type="password" id="input-cloud-file-id" placeholder="ID souboru z Google Disku"
                             oninput="admin.saveSettings(false)" disabled style="opacity: 0.7; cursor: not-allowed;">
                         <small style="color:#888; font-size:0.75em; display:block; margin-top:4px;">
                             ID získáte z odkazu pro sdílení (např. 19QC...e1f3). Nastaveno správcem.
@@ -3603,6 +3622,7 @@
                     const input = document.getElementById('input-cloud-file-id');
                     const btn = document.getElementById('btn-unlock-cloud-id');
                     input.disabled = false;
+                    input.type = 'text'; // Reveal the ID
                     input.style.opacity = '1';
                     input.style.cursor = 'text';
                     input.focus();
@@ -4026,7 +4046,7 @@
                     if (state.referees.length > 0) {
                         for (let r = 0; r < refsPerMatch; r++) {
                             const ref = state.referees[(refIdx + r) % state.referees.length];
-                            if (ref) assignedRefs.push(ref.name);
+                            if (ref) assignedRefs.push(ref.id);
                         }
                         refIdx += refsPerMatch;
                     }
@@ -4044,8 +4064,25 @@
                     });
                 });
 
+                // CLEANUP: Keep only used identities and their assets
+                const usedTeamIds = new Set(state.schedule.filter(m => m.type === 'match').flatMap(m => [m.home, m.guest]));
+                const usedRefIds = new Set(state.schedule.filter(m => m.type === 'match').map(m => m.referee));
+
+                state.teams = state.teams.filter(t => usedTeamIds.has(t.id));
+                state.referees = state.referees.filter(r => usedRefIds.has(r.id));
+
+                Object.keys(state.teamLogos).forEach(id => {
+                    if (!usedTeamIds.has(id)) delete state.teamLogos[id];
+                });
+                Object.keys(state.teamAnthems).forEach(id => {
+                    if (!usedTeamIds.has(id)) delete state.teamAnthems[id];
+                });
+
                 admin.saveSettings(false); // Silent save
                 ui.renderSchedule();
+                admin.renderIdentityInputs(); // Refresh lists
+                admin.renderLogoSettings();   // Refresh logo section
+                game.syncProjection();
                 game.syncProjection();
                 alert(`Rozpis pro ${count} družstev byl vygenerován.`);
             },
@@ -4054,8 +4091,10 @@
                 const type = document.getElementById('sched-type').value;
                 const isEvent = type === 'event';
                 const titleSel = document.getElementById('sched-title');
-                const customTitle = document.getElementById('sched-custom-title').value.trim();
-                const title = (isEvent || customTitle) ? (customTitle || titleSel.value) : titleSel.value;
+                const customTitleEl = document.getElementById('sched-custom-title');
+                const isCustomVisible = customTitleEl.style.display !== 'none';
+                const customTitle = customTitleEl.value.trim();
+                const title = (isEvent || isCustomVisible) ? (customTitle || titleSel.value) : titleSel.value;
 
                 const match = {
                     type,
@@ -4167,8 +4206,10 @@
                     const type = document.getElementById('sched-type').value;
                     const isEvent = type === 'event';
                     const titleSel = document.getElementById('sched-title');
-                    const customTitle = document.getElementById('sched-custom-title').value.trim();
-                    const title = (isEvent || customTitle) ? (customTitle || titleSel.value) : titleSel.value;
+                    const customTitleEl = document.getElementById('sched-custom-title');
+                    const isCustomVisible = customTitleEl.style.display !== 'none';
+                    const customTitle = customTitleEl.value.trim();
+                    const title = (isEvent || isCustomVisible) ? (customTitle || titleSel.value) : titleSel.value;
 
                     let hScore = document.getElementById('sched-home-score').value;
                     let gScore = document.getElementById('sched-guest-score').value;
@@ -4191,9 +4232,17 @@
                         guestScore: isEvent ? null : parsedG,
                         duration: isEvent ? parseInt(document.getElementById('sched-duration').value || 600) : null
                     };
+                    const wasActive = (state.pendingEditIndex === state.activeMatchIndex);
                     admin.cancelEdit(); // Reset UI
                     ui.renderSchedule();
-                    admin.saveToStorage(); game.syncProjection();
+                    admin.saveToStorage();
+
+                    if (wasActive) {
+                        // Refresh active display immediately
+                        admin.loadMatch(state.activeMatchIndex, false);
+                    } else {
+                        game.syncProjection();
+                    }
                     admin.toggleScheduleForm(false); // Hide
                 }
             },
@@ -4241,15 +4290,6 @@
                 }
             },
 
-            setScheduleMode: (mode) => {
-                document.querySelectorAll('.sched-section').forEach(s => s.classList.remove('active'));
-                document.querySelectorAll('.sched-tab-btn').forEach(b => b.classList.remove('active'));
-
-                document.getElementById(`sched-section-${mode}`).classList.add('active');
-                document.getElementById(`tab-sched-${mode}`).classList.add('active');
-            },
-
-
             handleScheduleImport: (input) => {
                 if (!input.files || !input.files[0]) return;
                 const file = input.files[0];
@@ -4269,54 +4309,100 @@
                         }
 
                         const newMatches = [];
-                        let startRow = 0;
-                        if (json[0] && json[0].length >= 2) {
-                            const firstRowStr = json[0].join(" ").toLowerCase();
-                            if (firstRowStr.includes("tým") || firstRowStr.includes("družstvo") || firstRowStr.includes("host") || firstRowStr.includes("zápas") || firstRowStr.includes("skupina")) {
-                                startRow = 1;
+                        let colMap = { title: 0, home: 1, guest: 2, referee: 3, duration: 4 };
+                        let headerRowIndex = -1;
+
+                        // Smart Header Detection: Scan first 20 rows
+                        for (let r = 0; r < Math.min(json.length, 20); r++) {
+                            const row = json[r];
+                            if (!row || row.length < 2) continue;
+
+                            let detected = {};
+                            row.forEach((cell, c) => {
+                                const val = String(cell || "").toLowerCase();
+                                if (val.includes("domácí") || val.includes("home")) detected.home = c;
+                                if (val.includes("host") || val.includes("guest")) detected.guest = c;
+                                if (val.includes("rozhodčí") || val.includes("ref")) detected.referee = c;
+                                if (val.includes("název") || val.includes("skupina") || val.includes("fáze")) detected.title = c;
+                                if (val.includes("délka") || val.includes("duration") || val.includes("minut")) detected.duration = c;
+                            });
+
+                            // If we found at least 2 key columns (Home & Guest), consider this the header row
+                            if (detected.home !== undefined && detected.guest !== undefined) {
+                                colMap = { ...colMap, ...detected };
+                                headerRowIndex = r;
+                                break;
                             }
                         }
 
+                        let startRow = headerRowIndex + 1;
                         let addedTeams = 0;
                         let addedRefs = 0;
+
+                        const usedTeamIds = new Set();
+                        const usedRefIds = new Set();
 
                         for (let i = startRow; i < json.length; i++) {
                             const row = json[i];
                             if (!row || row.length < 2) continue;
 
-                            const title = String(row[0] || "Zápas").trim();
-                            const home = String(row[1] || "").trim();
-                            const guest = String(row[2] || "").trim();
-                            const ref = String(row[3] || "").trim();
-                            const duration = parseInt(row[4] || 600);
+                            const title = String(row[colMap.title] || "Zápas").trim();
+                            const home = String(row[colMap.home] || "").trim();
+                            const guest = String(row[colMap.guest] || "").trim();
+                            const ref = String(row[colMap.referee] || "").trim();
+                            const durationVal = row[colMap.duration];
+                            const duration = parseInt(durationVal || 600);
 
-                            if (!home && !guest && !title) continue;
+                            const resHome = admin.ensureIdentityExists(home, 'team');
+                            if (resHome) {
+                                addedTeams++;
+                                usedTeamIds.add(resHome);
+                            }
+                            const resGuest = admin.ensureIdentityExists(guest, 'team');
+                            if (resGuest) {
+                                addedTeams++;
+                                usedTeamIds.add(resGuest);
+                            }
+                            const resRef = admin.ensureIdentityExists(ref, 'ref');
+                            if (resRef) {
+                                addedRefs++;
+                                usedRefIds.add(resRef);
+                            }
 
                             newMatches.push({
                                 type: 'match',
                                 title: title,
-                                home: home,
-                                guest: guest,
-                                referee: ref,
+                                home: resHome || home,
+                                guest: resGuest || guest,
+                                referee: resRef || ref,
                                 homeScore: null,
                                 guestScore: null,
                                 duration: duration
                             });
-
-                            if (home && admin.ensureIdentityExists(home, 'team')) addedTeams++;
-                            if (guest && admin.ensureIdentityExists(guest, 'team')) addedTeams++;
-                            if (ref && admin.ensureIdentityExists(ref, 'ref')) addedRefs++;
                         }
+
+                        // CLEANUP: Remove unused identities and their assets
+                        state.teams = state.teams.filter(t => usedTeamIds.has(t.id));
+                        state.referees = state.referees.filter(r => usedRefIds.has(r.id));
+
+                        // Cleanup logos and anthems
+                        Object.keys(state.teamLogos).forEach(id => {
+                            if (!usedTeamIds.has(id)) delete state.teamLogos[id];
+                        });
+                        Object.keys(state.teamAnthems).forEach(id => {
+                            if (!usedTeamIds.has(id)) delete state.teamAnthems[id];
+                        });
 
                         // Always overwrite
                         state.schedule = newMatches;
                         state.activeMatchIndex = -1;
 
                         ui.renderSchedule();
-                        admin.saveToStorage(); game.syncProjection();
+                        admin.saveToStorage();
                         admin.renderIdentityInputs(); // Refresh lists
+                        admin.renderLogoSettings();   // Refresh logo section
                         game.syncProjection();
-                        alert(`Importováno ${newMatches.length} zápasů.\n(Přidáno ${addedTeams} nových družstev a ${addedRefs} rozhodčích)`);
+                        alert(`Importováno ${newMatches.length} zápasů.\n(Aplikace byla vyčištěna: ponecháno ${state.teams.length} družstev a ${state.referees.length} rozhodčích)`);
                         input.value = "";
                     } catch (err) {
                         console.error(err);
@@ -4327,15 +4413,14 @@
             },
 
             ensureIdentityExists: (name, type) => {
-                if (!name || name === "-" || name.toLowerCase() === "volno") return false;
+                if (!name || name === "-" || name.toLowerCase() === "volno") return null;
                 const list = type === 'team' ? state.teams : state.referees;
-                const exists = list.some(item => item.name.toLowerCase() === name.toLowerCase());
-                if (!exists) {
-                    const id = (type === 'team' ? "team_" : "ref_") + Date.now() + "_" + Math.floor(Math.random() * 1000);
-                    list.push({ id, name });
-                    return true;
-                }
-                return false;
+                const existing = list.find(item => item.name.toLowerCase() === name.toLowerCase());
+                if (existing) return existing.id;
+
+                const id = (type === 'team' ? "team_" : "ref_") + Date.now() + "_" + Math.floor(Math.random() * 1000);
+                list.push({ id, name });
+                return id;
             },
 
             onSchedTypeChange: () => {
@@ -4522,15 +4607,10 @@
                 // Cancel edit if clicking a different item (single click)
                 if (!isShift && !isCtrl && state.pendingEditIndex !== -1) {
                     if (state.pendingEditIndex !== index) {
-                        state.pendingEditIndex = -1;
-                        admin.clearSchedInputs();
-                        admin.toggleScheduleForm(false);
+                        admin.cancelEdit();
                     } else {
                         // Clicking the same item that's being edited - close it
-                        state.pendingEditIndex = -1;
-                        admin.clearSchedInputs();
-                        admin.toggleScheduleForm(false);
-                        ui.renderSchedule();
+                        admin.cancelEdit();
                         return; // Done
                     }
                 }
@@ -4626,7 +4706,12 @@
 
             editSelected: () => {
                 if (state.selectedIndices.length === 0) return;
-                admin.editScheduleMatch(state.selectedIndices[0]);
+                const index = state.selectedIndices[0];
+                if (state.pendingEditIndex === index) {
+                    admin.cancelEdit();
+                } else {
+                    admin.editScheduleMatch(index);
+                }
             },
 
             moveMatchesTo: (indices, targetIdx) => {
@@ -5586,9 +5671,15 @@
                 const infoDiv = document.getElementById('match-info-display');
                 if (state.activeMatchIndex > -1 && state.schedule[state.activeMatchIndex]) {
                     const m = state.schedule[state.activeMatchIndex];
-                    infoDiv.textContent = `${state.activeMatchIndex + 1}. ${m.title || ""}`;
+                    let html = `<div style="font-weight:bold;">${state.activeMatchIndex + 1}. ${m.title || ""}</div>`;
+
+                    const refName = admin.getRefName(m.referee);
+                    if (refName && refName !== "-") {
+                        html += `<div style="font-size: 0.8em; font-weight: normal; font-style: italic; margin-top: 2px;">${refName}</div>`;
+                    }
+                    infoDiv.innerHTML = html;
                 } else {
-                    infoDiv.textContent = state.tournamentName || "Zápas";
+                    infoDiv.innerHTML = `<div style="font-weight:bold;">${state.tournamentName || "Zápas"}</div>`;
                 }
             },
 
@@ -5686,7 +5777,7 @@
                         sel.innerHTML += `<option value="${t.id}">${t.name}</option>`;
                     });
                     // Only restore value if it still exists in the list or is empty
-                    if (state.teams.includes(currentVal) || currentVal === "") sel.value = currentVal;
+                    if (state.teams.some(t => t.id === currentVal) || currentVal === "") sel.value = currentVal;
                 });
 
                 // Referees
@@ -5699,7 +5790,7 @@
                     state.referees.forEach(r => {
                         sel.innerHTML += `<option value="${r.id}">${r.name}</option>`;
                     });
-                    if (state.referees.includes(currentVal) || currentVal === "") sel.value = currentVal;
+                    if (state.referees.some(r => r.id === currentVal) || currentVal === "") sel.value = currentVal;
                 });
             },
 
@@ -5937,7 +6028,17 @@
 
                     // Update Top Row
                     const titleEl = document.getElementById('p-match-title');
-                    if (titleEl) titleEl.innerText = matchData.title || "";
+                    if (titleEl) {
+                        let titleHtml = `<div>${matchData.title || ""}</div>`;
+                        // Only add referee if it's a match and has a referee assigned
+                        if (matchData.referee && matchData.referee !== "") {
+                            const refName = getRName(matchData.referee);
+                            if (refName && refName !== "-") {
+                                titleHtml += `<div style="font-size: 0.6em; opacity: 0.7; margin-top: 0.5vh; font-weight: 400;">${refName}</div>`;
+                            }
+                        }
+                        titleEl.innerHTML = titleHtml;
+                    }
 
                     const isEventMode = !!matchData.isEvent;
                     const phaseNameEl = document.getElementById('p-phase-name');
