@@ -1121,6 +1121,32 @@
                             oninput="admin.saveSettings(false)">
                     </div>
 
+                    <div class="form-group">
+                        <label>Kategorie</label>
+                        <select id="input-tournament-category" onchange="admin.saveSettings(false)">
+                            <option value="">-- Bez kategorie --</option>
+                            <optgroup label="Vzory základní">
+                                <option value="U9">U9 (Předžáci do 8 let)</option>
+                                <option value="U11">U11 (Mladší žáci 9–10 let)</option>
+                                <option value="U13">U13 (Mladší žáci/žákyně 11–12 let)</option>
+                                <option value="U15">U15 (Starší žáci/žákyně 13–14 let)</option>
+                                <option value="U17">U17 (Kadeti/Kadetky 15–16 let)</option>
+                                <option value="U19">U19 (Junioři/Juniorky 17–18 let)</option>
+                                <option value="U23">U23 (Muži/Ženy 19–22 let)</option>
+                                <option value="Elite">Elite (Muži/Ženy 23+ let)</option>
+                                <option value="Masters">Masters (Muži/Ženy 30+ let)</option>
+                            </optgroup>
+                            <optgroup label="Vzory kolová 2022">
+                                <option value="Žáci">Žáci</option>
+                                <option value="Junioři">Junioři</option>
+                                <option value="U23_kolova">U23</option>
+                                <option value="Elite_kolova">Elite</option>
+                                <option value="Veteráni">Veteráni</option>
+                                <option value="Ženy">Ženy</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
                     <h4 style="margin: 15px 0 10px 0; border: none; padding: 0;">Délka kroků (s)</h4>
                     <div style="display: flex; gap: 10px; margin-bottom: 15px;">
                         <div class="form-group" style="flex: 1; margin-bottom: 0;">
@@ -1871,6 +1897,7 @@
             sessionId: "", // Will be set in KOMUNIKACE
             isLoading: false,
             tournamentName: "",
+            tournamentCategory: "", // Add category field
             times: { setup: 10, play: 420, break: 105 }, // in seconds
             teams: [],
             teamLogos: {}, // Mapping team name to Base64
@@ -2925,6 +2952,7 @@
             saveSettings: (showAlert = true) => {
                 if (state.isLoading) return;
                 state.tournamentName = document.getElementById('input-tournament-name').value;
+                state.tournamentCategory = document.getElementById('input-tournament-category').value;
 
                 state.times.setup = Math.max(0, parseInt(document.getElementById('time-setup').value || 10));
                 state.times.play = Math.max(0, parseInt(document.getElementById('time-play').value || 420));
@@ -3018,7 +3046,7 @@
                     ui.renderSchedule();
                     admin.renderIdentityInputs(); // Refresh labels
                     ui.updateFooterVisibility();
-                    game.resetTimer();
+
                     game.syncProjection();
                     if (showAlert) alert("Nastavení uloženo.");
                 }
@@ -3886,10 +3914,19 @@
             resetApp: () => {
                 if (confirm("Opravdu chcete vymazat všechna data aplikace (týmy, rozpis, zvuk, jingly)? Tuto akci nelze vzít zpět.")) {
                     localStorage.removeItem('scoreboardState');
-                    // Clear IndexedDB databases
-                    indexedDB.deleteDatabase("MusicDB");
-                    indexedDB.deleteDatabase("JingleDB");
-                    location.reload();
+
+                    const deleteDB = (name) => {
+                        return new Promise((resolve) => {
+                            const req = indexedDB.deleteDatabase(name);
+                            req.onsuccess = resolve;
+                            req.onerror = resolve; // Proceed even on error
+                            req.onblocked = resolve;
+                        });
+                    };
+
+                    Promise.all([deleteDB("MusicDB"), deleteDB("JingleDB")]).then(() => {
+                        location.reload();
+                    });
                 }
             },
 
@@ -4755,6 +4792,7 @@
                 if (loaded) {
                     const parsed = JSON.parse(loaded);
                     state.tournamentName = parsed.tournamentName || "";
+                    state.tournamentCategory = parsed.tournamentCategory || "";
                     if (parsed.times) {
                         state.times = parsed.times;
                         // FIX: If user has stuck '2' values, force new defaults
@@ -4891,6 +4929,7 @@
 
                 // Set Inputs
                 document.getElementById('input-tournament-name').value = state.tournamentName;
+                document.getElementById('input-tournament-category').value = state.tournamentCategory || "";
                 document.getElementById('time-setup').value = state.times.setup;
                 document.getElementById('time-play').value = state.times.play;
                 document.getElementById('time-break').value = state.times.break;
@@ -5010,6 +5049,7 @@
                 // --- Metadata Header for Excel ---
                 const metaRows = [
                     [state.tournamentName || "Turnajový rozpis"],
+                    ["Kategorie:", state.tournamentCategory || "-"],
                     ["Pořadatel:", state.tournamentOrganizer || "-"],
                     ["Datum:", state.tournamentDate ? new Date(state.tournamentDate).toLocaleDateString('cs-CZ') : "-"],
                     ["Místo:", state.tournamentLocation || "-"],
@@ -5063,6 +5103,7 @@
                 html += `<h1>${state.tournamentName || "Turnajový rozpis"}</h1>`;
                 html += `<div class="meta" style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:30px; background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
                     <div>
+                        <strong>Kategorie:</strong> ${state.tournamentCategory || "-"}<br>
                         <strong>Pořadatel:</strong> ${state.tournamentOrganizer || "-"}<br>
                         <strong>Datum:</strong> ${state.tournamentDate ? new Date(state.tournamentDate).toLocaleDateString('cs-CZ') : "-"}<br>
                         <strong>Místo:</strong> ${state.tournamentLocation || "-"}<br>
