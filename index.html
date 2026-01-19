@@ -2017,7 +2017,9 @@
             appId: "1:1089053095317:web:d90f097e7df2a53e34f29c"
         };
 
-        // --- SESSION HANDLING ---
+        // ===================================================================================
+        // REGION: RELACE A SYNCHRONIZACE (SESSION & SYNC)
+        // ===================================================================================
         const urlParams = new URLSearchParams(window.location.search);
         const isPO = urlParams.has('projection');
         const isQR = urlParams.get('mode') === 'qr';
@@ -2045,19 +2047,22 @@
         // HERNÍ JÁDRO (GAME)
         // ===================================================================================
         // --- CORE LOGIC CLASS ---
-        // Initialize Firebase
+        // --- FIREBASE INITIALIZATION ---
         if (typeof firebase !== 'undefined' && typeof firebaseConfig !== 'undefined') {
             try {
                 if (!firebase.apps.length) {
                     firebase.initializeApp(firebaseConfig);
-                    console.log("Firebase initialized");
+                    console.log("%c[Firebase] Initialized", "color: #4caf50; font-weight: bold;", { sessionId });
 
                     // Schedule cleanup on disconnect (Only for Admin window)
                     if (!isPO) {
-                        firebase.database().ref('sessions/' + sessionId).onDisconnect().remove();
+                        const sessionRef = firebase.database().ref('sessions/' + sessionId);
+                        sessionRef.onDisconnect().remove().then(() => {
+                            console.log("%c[Firebase] onDisconnect cleanup scheduled for session:", "color: #2196f3;", sessionId);
+                        }).catch(e => console.error("[Firebase] onDisconnect failed to schedule:", e));
                     }
                 }
-            } catch (e) { console.error("Firebase init failed:", e); }
+            } catch (e) { console.error("[Firebase] Initialization failed:", e); }
         }
 
         const game = {
