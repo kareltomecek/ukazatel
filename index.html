@@ -1012,6 +1012,284 @@
         .remove-chip:hover {
             color: #ff4d4d;
         }
+
+        /* ===================================================================================
+           REGION: VEŘEJNÁ ZOBRAZENÍ (PUBLIC VIEWS: OPZ, STANDINGS, CROSS)
+           =================================================================================== */
+        body.mode-view-schedule,
+        body.mode-view-standings,
+        body.mode-view-cross,
+        body.mode-qr {
+            margin: 0;
+            padding: 0 !important;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Default (Dark) Colors for Public Views */
+        body.mode-view-schedule.theme-dark,
+        body.mode-view-standings.theme-dark,
+        body.mode-view-cross.theme-dark {
+            background: #0b0e14;
+            color: #fff;
+        }
+
+        /* Light Mode Colors for Public Views */
+        body.mode-view-schedule.theme-light,
+        body.mode-view-standings.theme-light,
+        body.mode-view-cross.theme-light {
+            background: #f8f9fa;
+            color: #212529;
+        }
+
+        /* Hide other layouts when in public view mode */
+        body.mode-view-schedule #app-container,
+        body.mode-view-schedule #admin-footer,
+        body.mode-view-schedule #projection-layout,
+        body.mode-view-standings #app-container,
+        body.mode-view-standings #admin-footer,
+        body.mode-view-standings #projection-layout,
+        body.mode-view-cross #app-container,
+        body.mode-view-cross #admin-footer,
+        body.mode-view-cross #projection-layout {
+            display: none !important;
+        }
+
+        .pv-container {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            padding: 2vh 4vw;
+            box-sizing: border-box;
+        }
+
+        body.mode-view-schedule #view-schedule-layout {
+            display: flex;
+        }
+
+        body.mode-view-standings #view-standings-layout {
+            display: flex;
+        }
+
+        body.mode-view-cross #view-cross-layout {
+            display: flex;
+        }
+
+        .pv-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid var(--accent-blue);
+            padding-bottom: 1vh;
+            margin-bottom: 2vh;
+        }
+
+        .pv-title {
+            font-size: 3vw;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: var(--accent-blue);
+        }
+
+        .pv-clock {
+            font-size: 2.5vw;
+            font-weight: 700;
+            color: #888;
+        }
+
+        .pv-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1.6vw;
+        }
+
+        .pv-table th {
+            text-align: left;
+            padding: 1.5vh 1vw;
+            text-transform: uppercase;
+            font-size: 0.8em;
+        }
+
+        /* Hide table headers in QR mode */
+        body.mode-qr .pv-table thead {
+            display: none !important;
+        }
+
+        /* QR Layout unification */
+        body.mode-qr .pv-container:not(#qr-layout) {
+            display: none !important;
+        }
+
+        body.mode-qr #qr-layout {
+            display: flex !important;
+            background: transparent !important;
+            /* Will use body background */
+            padding: 2vh 4vw;
+        }
+
+        .qr-inner {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* Table header/cell theme overrides */
+        .theme-dark .pv-table th {
+            background: rgba(255, 255, 255, 0.05);
+            color: #aaa;
+        }
+
+        .theme-light .pv-table th {
+            background: rgba(0, 0, 0, 0.05);
+            color: #666;
+        }
+
+        .pv-table td {
+            padding: 1.2vh 1vw;
+        }
+
+        .theme-dark .pv-table td {
+            border-bottom: 1px solid #222;
+        }
+
+        .theme-light .pv-table td {
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .col-rank,
+        .col-pts,
+        .col-score {
+            text-align: center !important;
+        }
+
+        .pv-table td.played-score {
+            color: #4caf50;
+            font-weight: 900 !important;
+        }
+
+        .pv-table tr.active td.pv-score-cell {
+            font-weight: 900;
+        }
+
+        .pv-table tr.active {
+            border-left: 5px solid var(--accent-green);
+        }
+
+        .theme-dark .pv-table tr.active {
+            background: rgba(76, 175, 80, 0.2);
+        }
+
+        .theme-light .pv-table tr.active {
+            background: rgba(76, 175, 80, 0.15);
+        }
+
+        .pv-table tr.active td {
+            color: #fff;
+            font-weight: 700;
+        }
+
+        .pv-team-cell {
+            display: flex;
+            align-items: center;
+            gap: 1vw;
+        }
+
+        .pv-logo {
+            width: 3vw;
+            height: 3vw;
+            object-fit: contain;
+        }
+
+        /* Standing specific */
+        .col-rank {
+            width: 4vw;
+            text-align: center;
+            color: var(--accent-blue);
+            font-weight: 900;
+        }
+
+        .col-pts {
+            width: 6vw;
+            text-align: center;
+            font-weight: 900;
+        }
+
+        .col-score {
+            width: 8vw;
+            text-align: center;
+            color: #888;
+        }
+
+        /* Cross table specific */
+        .cross-table {
+            table-layout: fixed;
+        }
+
+        .cross-table td,
+        .cross-table th {
+            text-align: center;
+            height: 5vw;
+        }
+
+        .theme-dark .cross-table td,
+        .theme-dark .cross-table th {
+            border: 1px solid #333;
+        }
+
+        .theme-light .cross-table td,
+        .theme-light .cross-table th {
+            border: 1px solid #dee2e6;
+        }
+
+        .theme-dark .cross-table thead tr,
+        .theme-dark .cross-table tbody td:nth-child(1),
+        .theme-dark .cross-table tbody td:nth-child(2),
+        .theme-dark .cross-self {
+            background: #1f1f1f !important;
+        }
+
+        .theme-light .cross-table thead tr,
+        .theme-light .cross-table tbody td:nth-child(1),
+        .theme-light .cross-table tbody td:nth-child(2),
+        .theme-light .cross-self {
+            background: #f2f2f2 !important;
+        }
+
+        .cross-result {
+            font-weight: 900;
+        }
+
+        /* Custom Scrollbar for Public Views */
+        .pv-container div::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .pv-container div::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .theme-dark .pv-container div::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .theme-light .pv-container div::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+
+        .pv-container div::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
     </style>
 </head>
 
@@ -1020,7 +1298,7 @@
     <div id="app-container">
         <!-- LEFT PANEL: Game Controls -->
         <div id="game-controls" class="panel">
-            <button class="btn-full btn-projection" onclick="openProjectionWindow()">📽️ Otevřít Projekční Okno</button>
+            <button class="btn-full btn-projection" onclick="openProjectionWindow()">📽️ Otevřít Projekci Skóre</button>
 
             <div class="phase-nav">
                 <button class="nav-arrow" onclick="game.step(-1)">◄</button>
@@ -1679,12 +1957,74 @@
                 </div>
             </div>
 
+            <!-- 5. Public Views -->
+            <div class="accordion">
+                <div class="accordion-header" onclick="toggleAccordion('acc-public-views')">
+                    Veřejná zobrazení <span>▼</span>
+                </div>
+                <div id="acc-public-views" class="accordion-content">
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom: 20px;">
+                        <!-- PO -->
+                        <div style="flex-direction:column; display:flex; gap:5px;">
+                            <button class="btn-full" onclick="openProjectionWindow()"
+                                title="Otevřít hlavní projekci v novém okně."
+                                style="background:#9c27b0; margin-top:0;">📽️
+                                Projekce Skóre</button>
+                            <button class="small-btn btn-yellow" onclick="admin.openQRWindow()"
+                                style="margin-top:0; width:100%;">📱 QR kód</button>
+                        </div>
+                        <!-- Schedule -->
+                        <div style="flex-direction:column; display:flex; gap:5px;">
+                            <button class="btn-full" onclick="admin.openPublicView('schedule')"
+                                title="Otevřít pořadí zápasů v novém okně." style="background:#2196f3; margin-top:0;">📋
+                                Pořadí Zápasů</button>
+                            <button class="small-btn btn-yellow" onclick="admin.openQRWindow('schedule')"
+                                style="margin-top:0; width:100%;">📱 QR kód</button>
+                        </div>
+                        <!-- Standings -->
+                        <div style="flex-direction:column; display:flex; gap:5px;">
+                            <button class="btn-full" onclick="admin.openPublicView('standings')"
+                                title="Otevřít tabulku pořadí v novém okně."
+                                style="background:#4caf50; margin-top:0;">📊 Tabulka Pořadí</button>
+                            <button class="small-btn btn-yellow" onclick="admin.openQRWindow('standings')"
+                                style="margin-top:0; width:100%;">📱 QR kód</button>
+                        </div>
+                        <!-- Cross -->
+                        <div style="flex-direction:column; display:flex; gap:5px;">
+                            <button class="btn-full" onclick="admin.openPublicView('cross')"
+                                title="Otevřít křížovou tabulku v novém okně."
+                                style="background:#4caf50; margin-top:0;">🔢 Tabulka Křížová</button>
+                            <button class="small-btn btn-yellow" onclick="admin.openQRWindow('cross')"
+                                style="margin-top:0; width:100%;">📱 QR kód</button>
+                        </div>
+                    </div>
 
-            <!-- 5. Application Settings -->
+                    <h4 style="margin: 20px 0 10px 0; border:none; padding-bottom:5px; border-bottom:1px solid #333;">
+                        Nastavení zobrazení</h4>
+                    <div style="display:grid; grid-template-columns:1fr; gap:10px;">
+                        <div class="form-group">
+                            <label>Téma (Vzhled)</label>
+                            <select id="input-theme" onchange="admin.saveSettings(false); game.syncProjection()">
+                                <option value="light">Světlý režim</option>
+                                <option value="dark">Tmavý režim</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Zpoždění 1. kroku (s) v Projekci Skóre</label>
+                            <input type="number" id="input-po-delay" value="10" min="1" max="30"
+                                oninput="admin.saveSettings(false)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <!-- 6. Application Settings -->
             <div class="accordion">
                 <div class="accordion-header" onclick="toggleAccordion('acc-app-settings')">
                     Nastavení Aplikace <span>▼</span>
                 </div>
+
                 <div id="acc-app-settings" class="accordion-content">
                     <h4 style="margin-bottom:10px; border:none;">Cloudová Synchronizace</h4>
                     <div class="form-group">
@@ -1707,41 +2047,9 @@
                             style="background:#555;">📥 Export hlavní databáze hráčů</button>
                     </div>
 
-                    <h4 style="margin: 20px 0 10px 0; border:none;">Projekční Okno</h4>
-                    <div class="form-group">
-                        <label>Vzhled (Téma)</label>
-                        <select id="input-theme" onchange="admin.saveSettings(false); game.syncProjection()">
-                            <option value="light">Světlý režim (Light Mode)</option>
-                            <option value="dark">Tmavý režim (Dark Mode)</option>
-                        </select>
-                    </div>
-                    <div class="form-group"
-                        style="background: rgba(26, 115, 232, 0.1); padding: 10px; border-radius: 8px; border: 1px solid var(--accent-blue); margin-top: 10px;">
-                        <label style="color: var(--accent-blue); font-weight: bold;">Projekční URL (pro OBS / druhý
-                            monitor)</label>
-                        <div style="display: flex; gap: 5px; margin-top: 5px;">
-                            <input type="text" id="projection-url-display" readonly
-                                style="flex: 1; font-size: 0.8em; background: rgba(0,0,0,0.2); border: 1px solid #555; color: #fff; padding: 5px;">
-                            <button class="small-btn"
-                                onclick="const el = document.getElementById('projection-url-display'); el.select(); document.execCommand('copy'); alert('URL zkopírována!');"
-                                title="Kopírovat">📋</button>
-                        </div>
-                        <small style="display: block; margin-top: 5px; color: #aaa; font-size: 0.75em;">Vložte tuto
-                            adresu do OBS Browser Source nebo otevřete v novém okně.</small>
-                    </div>
-                    <div class="form-group" style="margin-top: 10px;">
-                        <button class="btn-full" onclick="admin.openQRWindow()"
-                            title="Otevřít samostatné okno s QR kódem pro diváky."
-                            style="background: #fbc02d; color: #000; font-weight: bold;">📱 Veřejný QR kód</button>
-                    </div>
                     <div class="form-group" style="margin-top: 10px; font-size: 0.8em; color: #888; text-align: right;">
                         ID Relace: <span id="session-id-display"
-                            style="font-family: monospace; font-weight: bold;">---</span>
-                    </div>
-                    <div class="form-group">
-                        <label>Prodleva před další položkou (s)</label>
-                        <input type="number" id="input-po-delay" value="10" min="1" max="30"
-                            oninput="admin.saveSettings(false)">
+                            style="font-family: monospace; font-weight: bold; color: var(--accent-blue);">---</span>
                     </div>
 
 
@@ -1838,6 +2146,59 @@
             <div id="p-footer-end" class="p-footer-center">Konec: --:--</div>
             <div id="p-footer-time" class="p-footer-right">00:00:00</div>
         </div>
+    </div>
+    </div>
+
+    <!-- ===================================================================================
+         REGION: VEŘEJNÁ ZOBRAZENÍ HTML (PUBLIC VIEWS HTML)
+         =================================================================================== -->
+    <div id="view-schedule-layout" class="pv-container">
+        <div class="pv-header">
+            <div class="pv-title" id="pv-sched-tournament-name">Pořadí Zápasů</div>
+        </div>
+        <div style="flex:1; overflow-y:auto;">
+            <table class="pv-table">
+                <thead>
+                    <tr>
+                        <th style="width:5%;">#</th>
+                        <th style="width:25%;">Zápas</th>
+                        <th style="width:35%;"></th>
+                        <th style="width:15%; text-align:center;">Výsledek</th>
+                        <th style="width:20%;">Rozhodčí</th>
+                    </tr>
+                </thead>
+                <tbody id="pv-sched-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="view-standings-layout" class="pv-container">
+        <div class="pv-header">
+            <div class="pv-title" id="pv-stand-title">Tabulka pořadí</div>
+        </div>
+        <div style="flex:1; overflow-y:auto;">
+            <table class="pv-table">
+                <thead>
+                    <tr>
+                        <th class="col-rank">#</th>
+                        <th>Družstvo</th>
+                        <th class="col-pts">Z</th>
+                        <th class="col-score">S</th>
+                        <th class="col-pts">R</th>
+                        <th class="col-pts">B</th>
+                        <th class="col-rank">M</th>
+                    </tr>
+                </thead>
+                <tbody id="pv-stand-body"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="view-cross-layout" class="pv-container">
+        <div class="pv-header">
+            <div class="pv-title" id="pv-cross-title">Křížová tabulka</div>
+        </div>
+        <div id="pv-cross-container" style="flex:1; overflow:auto;"></div>
     </div>
 
     <script>
@@ -2024,6 +2385,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const isPO = urlParams.has('projection');
         const isQR = urlParams.get('mode') === 'qr';
+        const viewMode = urlParams.get('view'); // 'schedule', 'standings', 'cross'
         let sessionId = urlParams.get('session');
 
         if (!sessionId) {
@@ -2033,7 +2395,7 @@
             }
         }
 
-        if (!isPO) {
+        if (!isPO && !viewMode) {
             sessionStorage.setItem('oms_session_id', sessionId);
         }
 
@@ -2041,6 +2403,7 @@
 
         // Update state with session info
         state.isProjectionMode = isPO;
+        state.viewMode = viewMode;
         state.sessionId = sessionId;
 
 
@@ -2068,56 +2431,62 @@
 
         const game = {
             init: () => {
-                if (state.isProjectionMode) {
-                    document.body.classList.add('mode-projection');
+                if (state.isProjectionMode || state.viewMode) {
+                    if (state.isProjectionMode) document.body.classList.add('mode-projection');
+                    if (state.viewMode) document.body.classList.add('mode-view-' + state.viewMode);
+                    if (isQR) document.body.classList.add('mode-qr');
 
-                    console.log("Projection: INIT starting");
+                    console.log("Public View/Projection: INIT starting", { mode: state.viewMode || 'projection' });
 
                     ui.updateProjection();
 
                     // HANDLER for both BroadcastChannel and Direct window messages
                     const handleSync = (receivedState) => {
                         if (!receivedState || typeof receivedState !== 'object') return;
-                        if (receivedState === 'REQUEST_SYNC') return; // Ignore strings
+                        if (receivedState === 'REQUEST_SYNC') return;
 
-                        const mode = state.isProjectionMode;
+                        // Keep local window modes
+                        const modePO = state.isProjectionMode;
+                        const modeView = state.viewMode;
                         Object.assign(state, receivedState);
-                        state.isProjectionMode = mode;
+                        state.isProjectionMode = modePO;
+                        state.viewMode = modeView;
 
-                        // Data received
                         ui.updateProjection();
                     };
 
-                    // 1. BroadcastChannel Listener (for OBS / different origins)
                     syncChannel.onmessage = (event) => handleSync(event.data);
-
-                    // 2. Window Message Listener (for window.open direct communication)
                     window.addEventListener('message', (event) => handleSync(event.data));
 
-                    // 3. Firebase Listener (for Cross-Device Sync)
                     if (typeof firebase !== 'undefined') {
                         try {
                             const dbRef = firebase.database().ref('sessions/' + state.sessionId);
                             dbRef.on('value', (snapshot) => {
                                 const data = snapshot.val();
-                                if (data) {
-                                    console.log("Firebase: Data received");
-                                    handleSync(data);
-                                }
+                                if (data) handleSync(data);
                             });
                         } catch (e) { console.error("Firebase sync error:", e); }
                     }
 
-                    // Request immediate sync from admin
                     syncChannel.postMessage('REQUEST_SYNC');
 
-                    // Initial update for clock
                     setInterval(() => {
                         const now = new Date();
-                        const dateStr = now.getFullYear() + '-' + (now.getMonth() + 1).toString().padStart(2, '0') + '-' + now.getDate().toString().padStart(2, '0');
-                        const timeEl = document.getElementById('p-footer-time');
-                        if (timeEl) timeEl.innerText = `${dateStr}\u00A0\u00A0\u00A0\u00A0${now.toLocaleTimeString('cs-CZ')}`;
+                        const timeStr = now.toLocaleTimeString('cs-CZ');
+                        const clocks = ['p-footer-time'];
+                        clocks.forEach(id => {
+                            const el = document.getElementById(id);
+                            if (el) {
+                                if (id === 'p-footer-time') {
+                                    const dateStr = now.getFullYear() + '-' + (now.getMonth() + 1).toString().padStart(2, '0') + '-' + now.getDate().toString().padStart(2, '0');
+                                    el.innerText = `${dateStr}\u00A0\u00A0\u00A0\u00A0${timeStr}`;
+                                } else {
+                                    el.innerText = timeStr;
+                                }
+                            }
+                        });
                     }, 1000);
+
                     ui.updateProjection();
                     return;
                 }
@@ -5162,12 +5531,6 @@
                 ui.updateProjection();
                 game.resetTimer();
 
-                // Update projection URL display
-                const urlDisp = document.getElementById('projection-url-display');
-                if (urlDisp) {
-                    urlDisp.value = window.location.origin + window.location.pathname + '?projection&session=' + state.sessionId;
-                }
-
                 ui.updateDurationHints(); // INIT DURATION HINTS
 
                 // Init music handle if exists
@@ -5178,7 +5541,20 @@
                         document.getElementById('music-list').innerHTML = `<li style="color:#4caf50; font-size:0.8em; text-align:center; padding:10px;">Složka nalezena. Klikněte na 'Vybrat složku' pro obnovení přístupu.</li>`;
                     }
                 });
-            }
+            },
+
+            openPublicView: (view) => {
+                const url = window.location.origin + window.location.pathname + '?view=' + view + '&session=' + state.sessionId;
+                window.open(url, "ScoreboardView_" + view + "_" + state.sessionId, "width=1000,height=700");
+            },
+
+            openQRWindow: (v = null) => {
+                const baseUrl = window.location.origin + window.location.pathname;
+                let url = baseUrl + '?projection&mode=qr&session=' + state.sessionId;
+                if (v) url += '&view=' + v;
+                qrWindow = window.open(url, "ScoreboardQR_" + (v || "proj") + "_" + state.sessionId, "width=600,height=600");
+                if (!qrWindow) alert("Vyskakovací okno bylo zablokováno.");
+            },
         };
 
 
@@ -5502,7 +5878,7 @@
                         <td style="padding:5px; text-align:center;">${s.gp}</td>
                         <td style="padding:5px; text-align:center; color:#888;">${s.gf}:${s.ga}</td>
                         <td style="padding:5px; text-align:center; color:${s.gd > 0 ? 'var(--accent-green)' : (s.gd < 0 ? 'var(--accent-red)' : '#888')}">${s.gd > 0 ? '+' + s.gd : s.gd}</td>
-                        <td style="padding:5px; text-align:center; font-weight:bold; color:var(--accent-green);">${s.pts}</td>
+                        <td style="padding:5px; text-align:center; font-weight:bold; color:var(--accent-blue);">${s.pts}</td>
                     </tr>`;
                 });
 
@@ -5584,7 +5960,7 @@
                     const s = stats[tRow.id] || { pts: 0, gf: 0, ga: 0 };
                     const rank = ranks[tRow.id] || "-";
 
-                    html += `<td style="padding:4px; border-left:2px solid #555; font-weight:bold; color:var(--accent-green);">${s.pts}</td>
+                    html += `<td style="padding:4px; border-left:2px solid #555; font-weight:bold; color:var(--accent-blue);">${s.pts}</td>
                              <td style="padding:4px; border-left:1px solid #444; color:#888;">${s.gf}:${s.ga}</td>
                              <td style="padding:4px; border-left:1px solid #444; color:#aaa; font-size:0.9em;">${s.gd > 0 ? '+' + s.gd : s.gd}</td>
                              <td style="padding:4px; border-left:1px solid #444; background:#332; font-weight:bold;">${rank}.</td>
@@ -5989,7 +6365,7 @@
 
             updateProjection: () => {
                 try {
-                    if (!state.isProjectionMode) return;
+                    if (!state.isProjectionMode && !state.viewMode) return;
 
                     const pLayout = document.getElementById('projection-layout');
                     const qrLayout = document.getElementById('qr-layout');
@@ -5998,21 +6374,55 @@
                         if (pLayout) pLayout.style.display = 'none';
                         if (qrLayout) {
                             qrLayout.style.display = 'flex';
-                            document.getElementById('qr-tournament-name').innerText = state.tournamentName || "OmniScore";
+
+                            const v = urlParams.get('view');
+                            let viewName = "";
+                            if (v === 'schedule') viewName = " - POŘADÍ ZÁPASŮ";
+                            else if (v === 'standings') viewName = " - TABULKA POŘADÍ";
+                            else if (v === 'cross') viewName = " - TABULKA KŘÍŽOVÁ";
+                            else viewName = ' - "Projekce Skóre"';
+
+                            const titleStr = (state.tournamentName || "OmniScore") + viewName;
+                            document.getElementById('qr-tournament-name').innerText = titleStr;
+                            document.title = titleStr;
                             document.getElementById('qr-session-id').innerText = state.sessionId;
 
-                            // Generate QR Code if empty
+                            // Generate QR Code once if empty (trimming to ignore whitespace)
                             const container = document.getElementById('qr-container');
-                            if (container && container.innerHTML === "") {
-                                const poUrl = window.location.origin + window.location.pathname + '?projection&session=' + state.sessionId;
-                                new QRCode(container, {
-                                    text: poUrl,
-                                    width: Math.min(window.innerWidth, window.innerHeight) * 0.5,
-                                    height: Math.min(window.innerWidth, window.innerHeight) * 0.5,
-                                    colorDark: "#000000",
-                                    colorLight: "#ffffff",
-                                    correctLevel: QRCode.CorrectLevel.L
-                                });
+                            const isEmpty = container && container.innerHTML.trim() === "";
+                            const isGenerated = container && container.dataset.generated === "true";
+
+                            if (container && isEmpty && !isGenerated) {
+                                container.dataset.generated = "true";
+                                setTimeout(() => {
+                                    try {
+                                        if (typeof QRCode === 'undefined') {
+                                            delete container.dataset.generated;
+                                            return;
+                                        }
+                                        const v = urlParams.get('view');
+                                        const poUrl = window.location.origin + window.location.pathname + '?session=' + state.sessionId + (v ? '&view=' + v : '&projection');
+
+                                        // Use fixed size for reliability in 300px container
+                                        const size = 260;
+
+                                        // Clear just in case before new generation
+                                        container.innerHTML = "";
+
+                                        new QRCode(container, {
+                                            text: poUrl,
+                                            width: size,
+                                            height: size,
+                                            colorDark: "#000000",
+                                            colorLight: "#ffffff",
+                                            correctLevel: QRCode.CorrectLevel.L
+                                        });
+                                    } catch (err) {
+                                        console.error("QR Generation failed", err);
+                                        delete container.dataset.generated;
+                                        container.innerHTML = "";
+                                    }
+                                }, 500);
                             }
                         }
                         return;
@@ -6021,7 +6431,6 @@
                     if (pLayout) pLayout.style.display = 'grid';
                     if (qrLayout) qrLayout.style.display = 'none';
 
-                    console.log("UI: updateProjection start");
 
                     const usedState = (state.poTransitionActive && state.poTransitionData) ? state.poTransitionData : state;
                     const isBlinking = state.poTransitionActive;
@@ -6178,10 +6587,192 @@
                     if (existingLayout) {
                         console.log("UI: layout height", existingLayout.offsetHeight, "rows", existingLayout.style.gridTemplateRows);
                     }
+                    // If we are in specific PUBLIC VIEW mode, call specialized renderers
+                    if (state.viewMode === 'schedule') ui.renderScheduleView();
+                    if (state.viewMode === 'standings') ui.renderStandingsView();
+                    if (state.viewMode === 'cross') ui.renderCrossView();
+
                 } catch (err) {
                     console.error("UI Update Error:", err);
                 }
-            }
+            },
+
+            renderScheduleView: () => {
+                const body = document.getElementById('pv-sched-body');
+                if (!body) return;
+                const prefix = state.tournamentName ? (state.tournamentName + " - ") : "";
+                const titleStr = prefix + "POŘADÍ ZÁPASŮ";
+                const tName = document.getElementById('pv-sched-tournament-name');
+                if (tName) tName.innerText = titleStr;
+                document.title = titleStr;
+
+                const teams = state.teams || [];
+                const referees = state.referees || [];
+                const getTName = (id) => {
+                    const t = teams.find(x => x.id === id);
+                    return t ? t.name : (id ? "XXX" : "Družstvo");
+                };
+                const getRName = (id) => {
+                    const r = referees.find(x => x.id === id);
+                    return r ? r.name : (id || "-");
+                };
+
+                body.innerHTML = "";
+                (state.schedule || []).forEach((match, idx) => {
+                    const tr = document.createElement('tr');
+
+                    const isFinished = (match.homeScore !== undefined && match.homeScore !== null);
+                    if (idx === state.activeMatchIndex) tr.className = 'active';
+
+                    const isEvent = match.type === 'event';
+                    if (isEvent) {
+                        tr.innerHTML = `
+                            <td>${idx + 1}</td>
+                            <td colspan="3" style="color:var(--accent-blue); font-weight:700; text-transform:uppercase; text-align:center;">☕ ${match.title || "Událost"}</td>
+                            <td>-</td>
+                        `;
+                    } else {
+                        const hLogo = state.teamLogos[match.home];
+                        const gLogo = state.teamLogos[match.guest];
+                        const scoreText = (match.homeScore !== undefined && match.homeScore !== null)
+                            ? (match.homeScore + ' : ' + match.guestScore)
+                            : '- : -';
+
+                        tr.innerHTML = `
+                            <td>${idx + 1}</td>
+                            <td style="font-size: 0.9em; color: #aaa;">${match.title || "Zápas"}</td>
+                            <td>
+                                <div class="pv-team-cell">
+                                    <div style="flex:1; text-align:right;">${getTName(match.home)}</div>
+                                    <img src="${hLogo || ''}" class="pv-logo" style="opacity:${hLogo ? '1' : '0'}">
+                                    <div style="font-weight:900;">:</div>
+                                    <img src="${gLogo || ''}" class="pv-logo" style="opacity:${gLogo ? '1' : '0'}">
+                                    <div style="flex:1; text-align:left;">${getTName(match.guest)}</div>
+                                </div>
+                            </td>
+                            <td class="pv-score-cell ${isFinished ? 'played-score' : ''}" style="text-align:center;">${scoreText}</td>
+                            <td>${getRName(match.referee)}</td>
+                        `;
+                    }
+                    body.appendChild(tr);
+                });
+            },
+
+            renderStandingsView: () => {
+                const prefix = state.tournamentName ? (state.tournamentName + " - ") : "";
+                const titleStr = prefix + "TABULKA POŘADÍ";
+                document.title = titleStr;
+                const tEl = document.getElementById('pv-stand-title');
+                if (tEl) tEl.innerText = titleStr;
+                const body = document.getElementById('pv-stand-body');
+                if (!body) return;
+
+                // Calculate standings (ensure we have latest data)
+                const standings = admin.calculateStandings();
+                body.innerHTML = "";
+                standings.forEach((s, idx) => {
+                    const tr = document.createElement('tr');
+                    const logo = state.teamLogos[s.id];
+                    const diffColor = s.gd > 0 ? '#4caf50' : (s.gd < 0 ? '#f44336' : '#888');
+                    const diffSign = s.gd > 0 ? '+' : '';
+
+                    tr.innerHTML = `
+                        <td class="col-rank">${idx + 1}.</td>
+                        <td>
+                            <div class="pv-team-cell">
+                                <img src="${logo || ''}" class="pv-logo" style="opacity:${logo ? '1' : '0'}">
+                                <span style="font-weight:bold;">${s.name}</span>
+                            </div>
+                        </td>
+                        <td class="col-pts">${s.gp}</td>
+                        <td class="col-score" style="color:#aaa;">${s.gf}:${s.ga}</td>
+                        <td class="col-pts" style="color:${diffColor}; font-weight:normal;">${diffSign}${s.gd}</td>
+                        <td class="col-pts" style="color:var(--accent-blue); font-weight:900;">${s.pts}</td>
+                    `;
+                    body.appendChild(tr);
+                });
+            },
+
+            renderCrossView: () => {
+                const prefix = state.tournamentName ? (state.tournamentName + " - ") : "";
+                const titleStr = prefix + "TABULKA KŘÍŽOVÁ";
+                document.title = titleStr;
+                const tEl = document.getElementById('pv-cross-title');
+                if (tEl) tEl.innerText = titleStr;
+                const container = document.getElementById('pv-cross-container');
+                if (!container) return;
+
+                const standings = admin.calculateStandings();
+                const activeIds = new Set(standings.map(s => s.id));
+                const teams = (state.teams || []).filter(t => activeIds.has(t.id));
+
+                if (teams.length === 0) {
+                    container.innerHTML = `<p style="text-align:center; color:#666; font-size:1.5vw; padding:5vh;">Žádná data pro křížovou tabulku.</p>`;
+                    return;
+                }
+
+                let html = `<table class="pv-table cross-table" style="font-size: 1.4vw;">
+                    <thead><tr>
+                        <th style="width:4vw; text-align:center;">#</th>
+                        <th style="text-align:left;">Družstvo</th>`;
+
+                teams.forEach((t, i) => {
+                    html += `<th style="width:5vw; text-align:center; border-left:1px solid #333;">${i + 1}</th>`;
+                });
+
+                html += `<th style="width:4vw; text-align:center; border-left:2px solid #444;">B</th>
+                         <th style="width:6vw; text-align:center; border-left:1px solid #333;">S</th>
+                         <th style="width:4vw; text-align:center; border-left:1px solid #333;">R</th>
+                         <th style="width:4vw; text-align:center; border-left:1px solid #333;">M</th>
+                    </tr></thead><tbody>`;
+
+                teams.forEach((tRow, i) => {
+                    html += `<tr>
+                        <td style="text-align:center; color:#666;">${i + 1}.</td>
+                        <td style="font-weight:bold; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tRow.name}</td>`;
+
+                    teams.forEach((tCol, j) => {
+                        let cellContent = "-";
+                        let cellStyle = "border-left:1px solid #333; text-align:center; color:#888;";
+
+                        if (i === j) {
+                            cellStyle += "color:transparent;"; // Ensure it's empty but styled
+                            cellContent = "";
+                            html += `<td class="cross-self" style="${cellStyle}">${cellContent}</td>`;
+                        } else {
+                            const match = (state.schedule || []).find(m =>
+                                m.type === 'match' &&
+                                ((m.home === tRow.id && m.guest === tCol.id) || (m.home === tCol.id && m.guest === tRow.id)) &&
+                                m.homeScore !== null && m.homeScore !== undefined
+                            );
+
+                            if (match) {
+                                cellStyle = "border-left:1px solid #333; text-align:center; font-weight:700;";
+                                if (match.home === tRow.id) {
+                                    cellContent = `${match.homeScore}:${match.guestScore}`;
+                                } else {
+                                    cellContent = `${match.guestScore}:${match.homeScore}`;
+                                }
+                            }
+                            html += `<td style="${cellStyle}">${cellContent}</td>`;
+                        }
+                    });
+
+                    const s = standings.find(x => x.id === tRow.id) || { pts: 0, gf: 0, ga: 0, gd: 0 };
+                    const rank = standings.findIndex(x => x.id === tRow.id) + 1;
+                    const diffColor = s.gd > 0 ? '#4caf50' : (s.gd < 0 ? '#f44336' : '#888');
+                    const diffSign = s.gd > 0 ? '+' : '';
+
+                    html += `<td style="border-left:2px solid #444; text-align:center; font-weight:900; color:var(--accent-blue);">${s.pts}</td>
+                             <td style="border-left:1px solid #333; text-align:center; color:#aaa;">${s.gf}:${s.ga}</td>
+                             <td style="border-left:1px solid #333; text-align:center; color:${diffColor};">${diffSign}${s.gd}</td>
+                             <td style="border-left:1px solid #333; text-align:center; font-weight:bold;">${rank}.</td>
+                     </tr>`;
+                });
+
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            },
         };
 
 
@@ -6247,19 +6838,21 @@
         </div>
     </div>
 
-    <div id="qr-layout"
-        style="display:none; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#1a1a1a; color:white; padding:20px; text-align:center;">
-        <div id="qr-header-stripe" style="height: 4px; width: 100%; position: fixed; top: 0; left: 0; z-index: 1000;">
+    <div id="qr-layout" class="pv-container">
+        <div class="pv-header">
+            <div class="pv-title" id="qr-tournament-name">OmniScore</div>
         </div>
-        <h1 id="qr-tournament-name" style="font-size:3.5vw; margin-bottom:2vh; color:var(--accent-blue);">OmniScore</h1>
-        </h1>
-        <div id="qr-container"
-            style="background:white; padding:1.5vw; border-radius:0.5vw; box-shadow:0 1vw 3vw rgba(0,0,0,0.5);"></div>
+        <div class="qr-inner">
+            <div id="qr-container"
+                style="background:white; padding:20px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5); width:300px; height:300px; display:flex; align-items:center; justify-content:center; margin:0 auto;">
+            </div>
+        </div>
         <div style="margin-top:4vh; font-size:2vw;">
             <p>Naskenujte pro sledování výsledků na mobilu</p>
             <p style="font-size:1.5vw; color:#888; margin-top:1vh;"><span id="qr-session-id"
                     style="color:var(--accent-blue); font-weight:bold;">---</span></p>
         </div>
+    </div>
     </div>
 
     <style>
