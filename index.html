@@ -12,6 +12,7 @@
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
     <style>
         :root {
             --bg-color: #1a1a1a;
@@ -1524,6 +1525,26 @@
 
         <!-- RIGHT PANEL: Administration -->
         <div id="admin-panel" class="panel">
+            <!-- Authentication Section -->
+            <div id="auth-section" style="margin-bottom: 20px; padding: 15px; background: rgba(33, 150, 243, 0.1); border: 1px solid var(--accent-blue); border-radius: var(--border-radius);">
+                <div id="auth-logged-out">
+                    <button class="btn-full btn-projection" onclick="auth.login()" style="background: var(--accent-blue); color: white;">
+                        🔑 Přihlásit se přes Google
+                    </button>
+                    <small style="display: block; margin-top: 8px; color: #888; text-align: center;">Pro uložení do cloudu a licenci.</small>
+                </div>
+                <div id="auth-logged-in" style="display: none; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 10px; overflow: hidden;">
+                        <img id="user-photo" src="" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--accent-blue);">
+                        <div style="overflow: hidden;">
+                            <div id="user-name" style="font-weight: bold; font-size: 0.9em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Uživatel</div>
+                            <div id="license-status" style="font-size: 0.75em; color: var(--accent-yellow);">Ověřování licence...</div>
+                        </div>
+                    </div>
+                    <button class="small-btn btn-red" onclick="auth.logout()" style="padding: 5px 10px; font-size: 0.8em;">Odhlásit</button>
+                </div>
+            </div>
+
             <h3>Turnajová Správa</h3>
             <!-- 1. Tournament Settings -->
             <div class="accordion">
@@ -2592,6 +2613,86 @@
         let poTransitionTimeoutID = null;
 
         // ===================================================================================
+        // AUTHENTICATION LOGIC
+        // ===================================================================================
+        const auth = {
+            currentUser: null,
+            isVIP: false,
+            isPaid: false,
+
+            init: () => {
+                firebase.auth().onAuthStateChanged((user) => {
+                    auth.currentUser = user;
+                    auth.updateUI();
+                    if (user) {
+                        auth.checkLicense(user);
+                    }
+                });
+            },
+
+            login: () => {
+                const provider = new firebase.auth.GoogleAuthProvider();
+                firebase.auth().signInWithPopup(provider).catch(err => {
+                    console.error("Login failed:", err);
+                    alert("Nepodařilo se přihlásit: " + err.message);
+                });
+            },
+
+            logout: () => {
+                firebase.auth().signOut().then(() => {
+                    auth.isVIP = false;
+                    auth.isPaid = false;
+                    auth.updateUI();
+                });
+            },
+
+            updateUI: () => {
+                const loggedOut = document.getElementById('auth-logged-out');
+                const loggedIn = document.getElementById('auth-logged-in');
+                const nameEl = document.getElementById('user-name');
+                const photoEl = document.getElementById('user-photo');
+
+                if (auth.currentUser) {
+                    loggedOut.style.display = 'none';
+                    loggedIn.style.display = 'flex';
+                    nameEl.innerText = auth.currentUser.displayName || auth.currentUser.email;
+                    photoEl.src = auth.currentUser.photoURL || '';
+                    photoEl.style.display = auth.currentUser.photoURL ? 'block' : 'none';
+                } else {
+                    loggedOut.style.display = 'block';
+                    loggedIn.style.display = 'none';
+                }
+            },
+
+            checkLicense: (user) => {
+                const statusEl = document.getElementById('license-status');
+                // 1. Check if user is in VIP list (simulated for now, would be in DB)
+                firebase.database().ref('vip_users').child(user.uid).once('value', snapshot => {
+                    if (snapshot.exists()) {
+                        auth.isVIP = true;
+                        statusEl.innerText = "⭐ VIP Přístup";
+                        statusEl.style.color = "var(--accent-green)";
+                    } else {
+                        // 2. Check Stripe status
+                        firebase.database().ref('users').child(user.uid).once('value', snap => {
+                            const data = snap.val();
+                            if (data && data.isPaid && data.expiresAt > Date.now()) {
+                                auth.isPaid = true;
+                                const date = new Date(data.expiresAt).toLocaleDateString();
+                                statusEl.innerText = "✅ Aktivní do " + date;
+                                statusEl.style.color = "var(--accent-green)";
+                            } else {
+                                auth.isPaid = false;
+                                statusEl.innerText = "❌ Demo verze (bez licence)";
+                                statusEl.style.color = "var(--accent-red)";
+                            }
+                        });
+                    }
+                });
+            }
+        };
+
+        // ===================================================================================
         // KOMUNIKACE (SYNC)
         // ===================================================================================
         let projectionWindow = null;
@@ -2646,6 +2747,9 @@
                 if (!firebase.apps.length) {
                     firebase.initializeApp(firebaseConfig);
                     console.log("%c[Firebase] Initialized", "color: #4caf50; font-weight: bold;", { sessionId });
+
+                    // Initialize Auth logic
+                    auth.init();
 
                     // Schedule cleanup on disconnect (Only for Admin window)
                     if (!isPO) {
